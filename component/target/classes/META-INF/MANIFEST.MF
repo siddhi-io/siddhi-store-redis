@@ -1,0 +1,45 @@
+Manifest-Version: 1.0
+Bnd-LastModified: 1519124659828
+Build-Jdk: 1.8.0_151
+Built-By: anusha
+Bundle-Contributors: WSO2 Inc
+Bundle-Copyright: WSO2 Inc
+Bundle-Description: WSO2 is an open source application development softw
+ are company focused on providing service-orientedarchitecture solutions
+  for professional developers.
+Bundle-Developers: WSO2 Inc
+Bundle-DocURL: https://docs.wso2.com
+Bundle-License: http://www.apache.org/licenses/LICENSE-2.0.txt
+Bundle-ManifestVersion: 2
+Bundle-Name: siddhi-store-redis
+Bundle-SymbolicName: siddhi-store-redis
+Bundle-Vendor: WSO2 Inc
+Bundle-Version: 1.0.0.SNAPSHOT
+Created-By: Apache Maven Bundle Plugin
+Export-Package: org.wso2.extension.siddhi.store.redis;uses:="org.wso2.si
+ ddhi.annotation,org.wso2.siddhi.annotation.util,org.wso2.siddhi.core.ex
+ ception,org.wso2.siddhi.core.table.record,org.wso2.siddhi.core.util.col
+ lection.operator,org.wso2.siddhi.core.util.config,org.wso2.siddhi.query
+ .api.definition,org.wso2.siddhi.query.api.expression.condition";version
+ ="1.0.0",org.wso2.extension.siddhi.store.redis.exceptions;uses:="org.ws
+ o2.siddhi.core.exception";version="1.0.0",org.wso2.extension.siddhi.sto
+ re.redis.utils;uses:="org.wso2.extension.siddhi.store.redis";version="1
+ .0.0"
+Import-Package: javax.management;resolution:=optional,net.sf.cglib.proxy
+ ;resolution:=optional,org.apache.commons.logging;resolution:=optional,o
+ rg.wso2.extension.siddhi.store.redis.exceptions;resolution:=optional,or
+ g.wso2.extension.siddhi.store.redis.utils;resolution:=optional,org.wso2
+ .siddhi.annotation;resolution:=optional;version="[4.0,5)",org.wso2.sidd
+ hi.annotation.util;resolution:=optional;version="[4.0,5)",org.wso2.sidd
+ hi.core.exception;resolution:=optional;version="[4.0,5)",org.wso2.siddh
+ i.core.table.record;resolution:=optional;version="[4.0,5)",org.wso2.sid
+ dhi.core.util.collection.operator;resolution:=optional;version="[4.0,5)
+ ",org.wso2.siddhi.core.util.config;resolution:=optional;version="[4.0,5
+ )",org.wso2.siddhi.query.api.annotation;resolution:=optional;version="[
+ 4.0,5)",org.wso2.siddhi.query.api.definition;resolution:=optional;versi
+ on="[4.0,5)",org.wso2.siddhi.query.api.expression.condition;resolution:
+ =optional;version="[4.0,5)",org.wso2.siddhi.query.api.util;resolution:=
+ optional;version="[4.0,5)"
+Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
+SCM-Revision: 2018-02-20T11:04:05Z
+Tool: Bnd-3.0.0.201509101326

@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RedisTable.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Siddhi Extension - redis Store Implementation</a> &gt; <a href="index.source.html" class="el_package">org.wso2.extension.siddhi.store.redis</a> &gt; <span class="el_source">RedisTable.java</span></div><h1>RedisTable.java</h1><pre class="source lang-java linenums">package org.wso2.extension.siddhi.store.redis;
+
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
+import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
+import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
+import org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils;
+import org.wso2.siddhi.annotation.Example;
+import org.wso2.siddhi.annotation.Extension;
+import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.table.record.AbstractRecordTable;
+import org.wso2.siddhi.core.table.record.ExpressionBuilder;
+import org.wso2.siddhi.core.table.record.RecordIterator;
+import org.wso2.siddhi.core.util.SiddhiConstants;
+import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import org.wso2.siddhi.core.util.collection.operator.CompiledExpression;
+import org.wso2.siddhi.core.util.config.ConfigReader;
+import org.wso2.siddhi.query.api.annotation.Annotation;
+import org.wso2.siddhi.query.api.annotation.Element;
+import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.siddhi.query.api.definition.TableDefinition;
+import org.wso2.siddhi.query.api.util.AnnotationHelper;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.exceptions.JedisException;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+
+/**
+ * This class contains the Event table implementation for Redis
+ **/
+
+@Extension(
+        name = &quot;redis&quot;,
+        namespace = &quot;store&quot;,
+        description = &quot;This extension assigns data source and connection instructions to event tables. It also &quot; +
+                &quot;implements read write operations on connected datasource&quot;,
+        parameters = {
+                @Parameter(name = &quot;host&quot;,
+                        description = &quot;host name of the redis server&quot;,
+                        type = {DataType.STRING}),
+                @Parameter(name = &quot;port&quot;,
+                        description = &quot;port which redis server can be accessed. If this is not specified via the &quot; +
+                                &quot;parameter,the default redis port '6379' will be used&quot;,
+                        type = {DataType.LONG}, optional = true, defaultValue = &quot;6379&quot;),
+
+                @Parameter(name = &quot;table.name&quot;,
+                        description = &quot;The name with which the event table should be persisted in the store. If no&quot; +
+                                &quot;name is specified via this parameter, the event table is persisted with the same &quot; +
+                                &quot;name as the Siddhi table.&quot;,
+                        type = {DataType.STRING}, optional = true,
+                        defaultValue = &quot;The tale name defined in the siddhi app&quot;),
+                @Parameter(name = &quot;password&quot;,
+                        description = &quot;password to connect to redis server&quot;,
+                        type = {DataType.STRING})
+        },
+        examples = {
+                @Example(
+                        syntax = &quot;@store(type='redis',hoslogt='localhost',port=6379, password='root',table&quot; +
+                                &quot;.name='fooTable')&quot; +
+                                &quot;define table fooTable(time long, date String)&quot;,
+                        description = &quot;above collection will create a redis table with the name FooTable&quot;
+                )
+        }
+)
+
+<span class="nc" id="L74">public class RedisTable extends AbstractRecordTable {</span>
+<span class="nc" id="L75">    private static final Log LOG = LogFactory.getLog(RedisTable.class);</span>
+    private List&lt;Attribute&gt; attributes;
+    private List&lt;String&gt; primaryKeys;
+    private Map&lt;String, Integer&gt; primaryKeyLocation;
+    private boolean schemaUpdatedOnce;
+    private boolean connectedOnce;
+    private JedisPool jedisPool;
+<span class="nc" id="L82">    private String host = &quot;localhost&quot;;</span>
+    private String password;
+<span class="nc" id="L84">    private int port = RedisTableConstants.DEFAULT_PORT;</span>
+    private Annotation primaryKeyAnnotation;
+    private Annotation storeAnnotation;
+    private Annotation indexingAnnotation;
+    private String tableName;
+    private Jedis jedis;
+    private List&lt;String&gt; indexing;
+
+    @Override
+    protected void init(TableDefinition tableDefinition, ConfigReader configReader) {
+<span class="nc" id="L94">        this.attributes = tableDefinition.getAttributeList();</span>
+<span class="nc" id="L95">        this.schemaUpdatedOnce = false;</span>
+<span class="nc" id="L96">        this.connectedOnce = false;</span>
+
+<span class="nc" id="L98">        primaryKeyAnnotation = AnnotationHelper.getAnnotation(SiddhiConstants.ANNOTATION_PRIMARY_KEY,</span>
+<span class="nc" id="L99">                tableDefinition.getAnnotations());</span>
+<span class="nc" id="L100">        storeAnnotation = AnnotationHelper.getAnnotation(SiddhiConstants.ANNOTATION_STORE, tableDefinition</span>
+<span class="nc" id="L101">                .getAnnotations());</span>
+<span class="nc" id="L102">        indexingAnnotation = AnnotationHelper.getAnnotation(SiddhiConstants.ANNOTATION_INDEX, tableDefinition</span>
+<span class="nc" id="L103">                .getAnnotations());</span>
+
+<span class="nc bnc" id="L105" title="All 2 branches missed.">        if (Objects.nonNull(primaryKeyAnnotation)) {</span>
+<span class="nc" id="L106">            this.primaryKeys = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L107">            List&lt;Element&gt; primaryKeyElements = primaryKeyAnnotation.getElements();</span>
+<span class="nc" id="L108">            primaryKeyElements.forEach(element -&gt; this.primaryKeys.add(element.getValue().trim()));</span>
+        }
+<span class="nc bnc" id="L110" title="All 2 branches missed.">        if (Objects.nonNull(indexingAnnotation)) {</span>
+<span class="nc" id="L111">            this.indexing = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L112">            List&lt;Element&gt; indexingElements = indexingAnnotation.getElements();</span>
+<span class="nc" id="L113">            indexingElements.forEach(element -&gt; this.indexing.add(element.getValue().trim()));</span>
+        }
+
+<span class="nc bnc" id="L116" title="All 2 branches missed.">        if (Objects.nonNull(storeAnnotation)) {</span>
+<span class="nc" id="L117">            host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);</span>
+
+<span class="nc bnc" id="L119" title="All 2 branches missed.">            if (Objects.nonNull(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PORT))) {</span>
+<span class="nc" id="L120">                port = Integer.parseInt(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PORT));</span>
+            }
+
+<span class="nc bnc" id="L123" title="All 2 branches missed.">            if (Objects.nonNull(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PASSWORD))) {</span>
+<span class="nc" id="L124">                password = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PASSWORD);</span>
+            }
+<span class="nc bnc" id="L126" title="All 2 branches missed.">            if (Objects.nonNull(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TABLE_NAME))) {</span>
+<span class="nc" id="L127">                tableName = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TABLE_NAME);</span>
+            } else {
+<span class="nc" id="L129">                tableName = tableDefinition.getId();</span>
+            }
+        }
+
+<span class="nc" id="L133">    }</span>
+
+    @Override
+    protected void add(List&lt;Object[]&gt; records) {
+<span class="nc" id="L137">        Map&lt;String, String&gt; attributeMap = new HashMap&lt;&gt;();</span>
+<span class="nc" id="L138">        StringBuilder builder = new StringBuilder(tableName);</span>
+//        StringBuilder indexMatabuilder = new StringBuilder(tableName);
+        try {
+<span class="nc bnc" id="L141" title="All 2 branches missed.">            for (Object[] record : records) {</span>
+<span class="nc" id="L142">                int i = 0;</span>
+<span class="nc bnc" id="L143" title="All 2 branches missed.">                for (Attribute attribute : attributes) {</span>
+<span class="nc" id="L144">                    attributeMap.put(attribute.getName(), record[i++].toString());</span>
+<span class="nc" id="L145">                }</span>
+<span class="nc bnc" id="L146" title="All 4 branches missed.">                if (Objects.nonNull(primaryKeys) &amp;&amp; !primaryKeys.isEmpty()) {</span>
+
+<span class="nc bnc" id="L148" title="All 2 branches missed.">                    for (String primaryKey : primaryKeys) {</span>
+<span class="nc" id="L149">                        builder.append(&quot;:&quot;).append(attributeMap.get(primaryKey));</span>
+<span class="nc" id="L150">                    }</span>
+<span class="nc" id="L151">                    jedis.hmset(builder.toString(), attributeMap);</span>
+<span class="nc bnc" id="L152" title="All 2 branches missed.">                    if (Objects.nonNull(indexing)) {</span>
+                    }
+                } else {
+<span class="nc" id="L155">                    String id = RedisTableUtils.generateRecordID();</span>
+<span class="nc" id="L156">                    jedis.hmset(id, attributeMap);</span>
+                }
+<span class="nc" id="L158">            }</span>
+<span class="nc" id="L159">        } catch (JedisException e) {</span>
+<span class="nc" id="L160">            LOG.error(&quot;Error while inserting records to Redis Event Table&quot; + e.getMessage(), e);</span>
+<span class="nc" id="L161">        }</span>
+<span class="nc" id="L162">    }</span>
+
+    @Override
+    protected RecordIterator&lt;Object[]&gt; find(Map&lt;String, Object&gt; findConditionParameterMap,
+                                            CompiledCondition compiledCondition) throws ConnectionUnavailableException {
+
+        try {
+<span class="nc" id="L169">            List&lt;String&gt; condition = RedisTableUtils.resolveCondition((RedisCompliedCondition) compiledCondition,</span>
+                    findConditionParameterMap);
+<span class="nc" id="L171">            return new RedisIterator(jedis, attributes, condition, tableName);</span>
+<span class="nc" id="L172">        } catch (Exception e) {</span>
+<span class="nc" id="L173">            throw new RedisTableException(&quot;Error while searching the records in Redis Event Table : &quot; + tableName, e);</span>
+        }
+    }
+
+    @Override
+    protected boolean contains(Map&lt;String, Object&gt; containsConditionParameterMap, CompiledCondition compiledCondition)
+            throws ConnectionUnavailableException {
+<span class="nc" id="L180">        return false;</span>
+    }
+
+    @Override
+    protected void delete(List&lt;Map&lt;String, Object&gt;&gt; deleteConditionParameterMaps, CompiledCondition compiledCondition)
+            throws ConnectionUnavailableException {
+
+<span class="nc" id="L187">    }</span>
+
+    @Override
+    protected void update(CompiledCondition updateCondition, List&lt;Map&lt;String, Object&gt;&gt; updateConditionParameterMaps,
+                          Map&lt;String, CompiledExpression&gt; updateSetExpressions,
+                          List&lt;Map&lt;String, Object&gt;&gt; updateSetParameterMaps) throws ConnectionUnavailableException {
+
+<span class="nc" id="L194">    }</span>
+
+    @Override
+    protected void updateOrAdd(CompiledCondition updateCondition,
+                               List&lt;Map&lt;String, Object&gt;&gt; updateConditionParameterMaps,
+                               Map&lt;String, CompiledExpression&gt; updateSetExpressions,
+                               List&lt;Map&lt;String, Object&gt;&gt; updateSetParameterMaps,
+                               List&lt;Object[]&gt; addingRecords)
+            throws ConnectionUnavailableException {
+
+<span class="nc" id="L204">    }</span>
+
+    @Override
+    protected CompiledCondition compileCondition(ExpressionBuilder expressionBuilder) {
+<span class="nc" id="L208">        RedisConditionVisitor visitor = new RedisConditionVisitor();</span>
+<span class="nc" id="L209">        expressionBuilder.build(visitor);</span>
+<span class="nc" id="L210">        return new RedisCompliedCondition(visitor.returnCondition());</span>
+    }
+
+    @Override
+    protected CompiledExpression compileSetAttribute(ExpressionBuilder expressionBuilder) {
+<span class="nc" id="L215">        RedisConditionVisitor visitor = new RedisConditionVisitor();</span>
+<span class="nc" id="L216">        expressionBuilder.build(visitor);</span>
+<span class="nc" id="L217">        return new RedisCompliedCondition(visitor.returnCondition());</span>
+    }
+
+    @Override
+    protected void connect() throws ConnectionUnavailableException {
+        try {
+<span class="nc bnc" id="L223" title="All 2 branches missed.">            if (jedisPool == null) {</span>
+<span class="nc" id="L224">                jedisPool = new JedisPool(new JedisPoolConfig(), host, port);</span>
+<span class="nc" id="L225">                jedis = jedisPool.getResource();</span>
+<span class="nc bnc" id="L226" title="All 2 branches missed.">                if (Objects.nonNull(password)) {</span>
+<span class="nc" id="L227">                    jedis.auth(password);</span>
+                }
+            }
+<span class="nc" id="L230">        } catch (Exception e) {</span>
+<span class="nc" id="L231">            throw new ConnectionUnavailableException(&quot;Error while initializing the Redis event table: &quot;</span>
+                    + tableName + &quot; : &quot;
+                    + e
+                    .getMessage
+<span class="nc" id="L235">                            (), e);</span>
+<span class="nc" id="L236">        }</span>
+
+<span class="nc" id="L238">    }</span>
+
+    @Override
+    protected void disconnect() {
+        try {
+<span class="nc bnc" id="L243" title="All 4 branches missed.">            if (Objects.nonNull(jedisPool)&amp;&amp;!jedisPool.isClosed()) {</span>
+<span class="nc" id="L244">                jedisPool.close();</span>
+            }
+<span class="nc" id="L246">        } catch (Exception e)</span>
+
+        {
+<span class="nc" id="L249">            LOG.error(&quot;Error while closing the redis client for table: &quot; + tableName + &quot; : &quot;, e);</span>
+<span class="nc" id="L250">        }</span>
+
+<span class="nc" id="L252">    }</span>
+
+    @Override
+    protected void destroy() {
+        try {
+<span class="nc" id="L257">            jedisPool.destroy();</span>
+<span class="nc" id="L258">        } catch (Exception e) {</span>
+<span class="nc" id="L259">            LOG.info(&quot;Error while closing the redis client for table: &quot; + tableName + &quot; : &quot; + e.getMessage(), e);</span>
+<span class="nc" id="L260">        }</span>
+<span class="nc" id="L261">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>

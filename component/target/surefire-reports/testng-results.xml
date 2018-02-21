@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testng-results skipped="0" failed="0" total="0" passed="0">
+  <reporter-output>
+  </reporter-output>
+  <suite name="Redis-Event-Table-Test-Suite" duration-ms="7" started-at="2018-02-20T11:04:18Z" finished-at="2018-02-20T11:04:18Z">
+    <groups>
+    </groups>
+    <test name="redis-tests" duration-ms="7" started-at="2018-02-20T11:04:18Z" finished-at="2018-02-20T11:04:18Z">
+    </test> <!-- redis-tests -->
+  </suite> <!-- Redis-Event-Table-Test-Suite -->
+</testng-results>

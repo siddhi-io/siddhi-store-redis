@@ -1,0 +1,286 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>RedisConditionVisitor.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">Siddhi Extension - redis Store Implementation</a> &gt; <a href="index.source.html" class="el_package">org.wso2.extension.siddhi.store.redis</a> &gt; <span class="el_source">RedisConditionVisitor.java</span></div><h1>RedisConditionVisitor.java</h1><pre class="source lang-java linenums">package org.wso2.extension.siddhi.store.redis;
+
+import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
+import org.wso2.siddhi.core.table.record.BaseExpressionVisitor;
+import org.wso2.siddhi.query.api.definition.Attribute;
+import org.wso2.siddhi.query.api.expression.condition.Compare;
+
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * Redis Condition Visitor class
+ **/
+public class RedisConditionVisitor extends BaseExpressionVisitor {
+
+    private List&lt;String&gt; conditionsList;
+    private boolean isBeginCompareRightOperand;
+    private boolean isStoreVariableOnRight;
+    private String currentStoreVariable;
+    private String currentStreamVariable;
+
+<span class="nc" id="L22">    public RedisConditionVisitor() {</span>
+<span class="nc" id="L23">        conditionsList = new ArrayList&lt;&gt;();</span>
+<span class="nc" id="L24">    }</span>
+
+    public List&lt;String&gt; returnCondition() {
+<span class="nc" id="L27">        return conditionsList;</span>
+    }
+
+    @Override
+    public void beginVisitAnd() {
+<span class="nc" id="L32">    }</span>
+
+    @Override
+    public void endVisitAnd() {
+<span class="nc" id="L36">    }</span>
+
+    @Override
+    public void beginVisitAndLeftOperand() {
+        //Not applicable
+<span class="nc" id="L41">    }</span>
+
+    @Override
+    public void endVisitAndLeftOperand() {
+        //Not applicable
+<span class="nc" id="L46">    }</span>
+
+    @Override
+    public void beginVisitAndRightOperand() {
+<span class="nc" id="L50">        conditionsList.add(RedisTableConstants.JAVA_AND);</span>
+<span class="nc" id="L51">    }</span>
+
+    @Override
+    public void endVisitAndRightOperand() {
+        //Not applicable
+<span class="nc" id="L56">    }</span>
+
+    @Override
+    public void beginVisitOr() {
+
+<span class="nc" id="L61">    }</span>
+
+    @Override
+    public void endVisitOr() {
+
+<span class="nc" id="L66">    }</span>
+
+    @Override
+    public void beginVisitOrLeftOperand() {
+        //Not applicable
+<span class="nc" id="L71">    }</span>
+
+    @Override
+    public void endVisitOrLeftOperand() {
+        //Not applicable
+<span class="nc" id="L76">    }</span>
+
+    @Override
+    public void beginVisitOrRightOperand() {
+<span class="nc" id="L80">        conditionsList.add(RedisTableConstants.JAVA_OR);</span>
+<span class="nc" id="L81">    }</span>
+
+    @Override
+    public void endVisitOrRightOperand() {
+        //Not applicable
+<span class="nc" id="L86">    }</span>
+
+    @Override
+    public void beginVisitNot() {
+<span class="nc" id="L90">        conditionsList.add(RedisTableConstants.JAVA_NOT);</span>
+<span class="nc" id="L91">    }</span>
+
+    @Override
+    public void endVisitNot() {
+        //Not applicable
+<span class="nc" id="L96">    }</span>
+
+    @Override
+    public void beginVisitCompare(Compare.Operator operator) {
+
+<span class="nc" id="L101">    }</span>
+
+    @Override
+    public void endVisitCompare(Compare.Operator operator) {
+
+//        condition.append(RedisTableConstants.CLOSE_PARENTHESIS);
+<span class="nc" id="L107">    }</span>
+
+    @Override
+    public void beginVisitCompareLeftOperand(Compare.Operator operator) {
+<span class="nc bnc" id="L111" title="All 2 branches missed.">        if (operator == Compare.Operator.NOT_EQUAL) {</span>
+<span class="nc" id="L112">            conditionsList.add(RedisTableConstants.NOT_EQUAL);</span>
+
+        }
+<span class="nc" id="L115">    }</span>
+
+    @Override
+    public void endVisitCompareLeftOperand(Compare.Operator operator) {
+        //Not applicable
+<span class="nc" id="L120">    }</span>
+
+    @Override
+    public void beginVisitCompareRightOperand(Compare.Operator operator) {
+<span class="nc" id="L124">        isBeginCompareRightOperand = true;</span>
+<span class="nc" id="L125">    }</span>
+
+    @Override
+    public void endVisitCompareRightOperand(Compare.Operator operator) {
+<span class="nc bnc" id="L129" title="All 2 branches missed.">        if (!isStoreVariableOnRight) {</span>
+<span class="nc" id="L130">            conditionsList.add(currentStoreVariable);</span>
+<span class="nc bnc" id="L131" title="All 7 branches missed.">            switch (operator) {</span>
+                case EQUAL:
+<span class="nc" id="L133">                    conditionsList.add(RedisTableConstants.EQUAL);</span>
+<span class="nc" id="L134">                    break;</span>
+                case GREATER_THAN:
+<span class="nc" id="L136">                    conditionsList.add(RedisTableConstants.GREATER_THAN);</span>
+<span class="nc" id="L137">                    break;</span>
+                case GREATER_THAN_EQUAL:
+<span class="nc" id="L139">                    conditionsList.add(RedisTableConstants.GREATER_THAN_EQUAL);</span>
+<span class="nc" id="L140">                    break;</span>
+                case LESS_THAN:
+<span class="nc" id="L142">                    conditionsList.add(RedisTableConstants.LESS_THAN);</span>
+<span class="nc" id="L143">                    break;</span>
+                case LESS_THAN_EQUAL:
+<span class="nc" id="L145">                    conditionsList.add(RedisTableConstants.LESS_THAN_EQUAL);</span>
+<span class="nc" id="L146">                    break;</span>
+                case NOT_EQUAL:
+<span class="nc" id="L148">                    conditionsList.add(RedisTableConstants.NOT_EQUAL);</span>
+                    break;
+            }
+<span class="nc" id="L151">            conditionsList.add(currentStreamVariable);</span>
+        } else {
+<span class="nc" id="L153">            isStoreVariableOnRight = false;</span>
+<span class="nc" id="L154">            conditionsList.add(currentStoreVariable);</span>
+<span class="nc bnc" id="L155" title="All 7 branches missed.">            switch (operator) {</span>
+                case EQUAL:
+<span class="nc" id="L157">                    conditionsList.add(RedisTableConstants.EQUAL);</span>
+<span class="nc" id="L158">                    break;</span>
+                case GREATER_THAN:
+<span class="nc" id="L160">                    conditionsList.add(RedisTableConstants.LESS_THAN);</span>
+<span class="nc" id="L161">                    break;</span>
+                case GREATER_THAN_EQUAL:
+<span class="nc" id="L163">                    conditionsList.add(RedisTableConstants.LESS_THAN_EQUAL);</span>
+<span class="nc" id="L164">                    break;</span>
+                case LESS_THAN:
+<span class="nc" id="L166">                    conditionsList.add(RedisTableConstants.GREATER_THAN);</span>
+<span class="nc" id="L167">                    break;</span>
+                case LESS_THAN_EQUAL:
+<span class="nc" id="L169">                    conditionsList.add(RedisTableConstants.GREATER_THAN_EQUAL);</span>
+<span class="nc" id="L170">                    break;</span>
+                case NOT_EQUAL:
+<span class="nc" id="L172">                    conditionsList.add(RedisTableConstants.NOT_EQUAL);</span>
+                    break;
+            }
+<span class="nc" id="L175">            conditionsList.add(currentStreamVariable);</span>
+        }
+<span class="nc" id="L177">    }</span>
+
+    @Override
+    public void beginVisitIsNull(String streamId) {
+<span class="nc" id="L181">        conditionsList.add(RedisTableConstants.JAVA_NULL);</span>
+<span class="nc" id="L182">    }</span>
+
+    @Override
+    public void endVisitIsNull(String streamId) {
+<span class="nc" id="L186">        conditionsList.add(currentStoreVariable);</span>
+<span class="nc" id="L187">        conditionsList.add(RedisTableConstants.JAVA_NULL);</span>
+<span class="nc" id="L188">    }</span>
+
+    @Override
+    public void beginVisitIn(String storeId) {
+//        condition.append(RDBMSTableConstants.SQL_IN).append(RDBMSTableConstants.WHITESPACE);
+<span class="nc" id="L193">    }</span>
+
+    @Override
+    public void endVisitIn(String storeId) {
+        //Not applicable
+<span class="nc" id="L198">    }</span>
+
+    @Override
+    public void beginVisitConstant(Object value, Attribute.Type type) {
+        //Not applicable
+<span class="nc" id="L203">    }</span>
+
+    @Override
+    public void endVisitConstant(Object value, Attribute.Type type) {
+<span class="nc" id="L207">        currentStreamVariable = value.toString();</span>
+<span class="nc" id="L208">    }</span>
+
+    @Override
+    public void beginVisitMath(MathOperator mathOperator) {
+
+        //Not applicable
+<span class="nc" id="L214">    }</span>
+
+    @Override
+    public void endVisitMath(MathOperator mathOperator) {
+        //Not applicable
+<span class="nc" id="L219">    }</span>
+
+    @Override
+    public void beginVisitMathLeftOperand(MathOperator mathOperator) {
+        //Not applicable
+<span class="nc" id="L224">    }</span>
+
+    @Override
+    public void endVisitMathLeftOperand(MathOperator mathOperator) {
+        //Not applicable
+<span class="nc" id="L229">    }</span>
+
+    @Override
+    public void beginVisitMathRightOperand(MathOperator mathOperator) {
+        //Not applicable
+<span class="nc" id="L234">    }</span>
+
+    @Override
+    public void endVisitMathRightOperand(MathOperator mathOperator) {
+        //Not applicable
+<span class="nc" id="L239">    }</span>
+
+    @Override
+    public void beginVisitAttributeFunction(String namespace, String functionName) {
+        //Not applicable
+<span class="nc" id="L244">    }</span>
+
+    @Override
+    public void endVisitAttributeFunction(String namespace, String functionName) {
+        //Not applicable
+<span class="nc" id="L249">    }</span>
+
+    @Override
+    public void beginVisitParameterAttributeFunction(int index) {
+        //Not applicable
+<span class="nc" id="L254">    }</span>
+
+    @Override
+    public void endVisitParameterAttributeFunction(int index) {
+        //Not applicable
+<span class="nc" id="L259">    }</span>
+
+    @Override
+    public void beginVisitStreamVariable(String id, String streamId, String attributeName, Attribute.Type type) {
+<span class="nc" id="L263">        currentStreamVariable = RedisTableConstants.OPEN_SQURE_BRACKETS + id + RedisTableConstants.CLOSE_SQURE_BRACKETS;</span>
+<span class="nc" id="L264">    }</span>
+
+    @Override
+    public void endVisitStreamVariable(String id, String streamId, String attributeName, Attribute.Type type) {
+        //Not applicable
+<span class="nc" id="L269">    }</span>
+
+    @Override
+    public void beginVisitStoreVariable(String storeId, String attributeName, Attribute.Type type) {
+<span class="nc bnc" id="L273" title="All 2 branches missed.">        if (isBeginCompareRightOperand) {</span>
+<span class="nc" id="L274">            isStoreVariableOnRight = true;</span>
+        }
+<span class="nc" id="L276">        currentStoreVariable = attributeName;</span>
+<span class="nc" id="L277">    }</span>
+
+    @Override
+    public void endVisitStoreVariable(String storeId, String attributeName, Attribute.Type type) {
+        //Not applicable
+<span class="nc" id="L282">    }</span>
+
+}
+
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.0.201801022044</span></div></body></html>
