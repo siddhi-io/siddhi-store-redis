@@ -1,6 +1,23 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.extension.siddhi.store.redis;
 
-import org.wso2.extension.siddhi.store.redis.exceptions.RedisIteratorException;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.core.table.record.RecordIterator;
 import org.wso2.siddhi.query.api.definition.Attribute;
@@ -11,9 +28,11 @@ import redis.clients.jedis.ScanResult;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+
 
 /**
  * Redis iterator Class
@@ -21,64 +40,88 @@ import java.util.Objects;
 public class RedisIterator implements RecordIterator<Object[]> {
     private Jedis jedis;
     private Map<String, String> resultMap = new HashMap<>();
-    private ScanResult scanResult;
+    private ScanResult scanResults;
     private List<Attribute> attributes;
     private String tableName;
-    private List scanResultsList;
+    private List scanResultsList = new ArrayList();
     private boolean preFetched;
     private Object[] nextValue;
     private boolean initialTraverse;
-    private List<String> query;
+    private boolean isInitialTraverse = true;
+    private BasicCompareOperation query;
+    private List<String> primaryKeys;
+    private List<String> indexes;
+    private Object[] result;
+    private StoreVariable storeVariable;
+    private StreamVariable streamVariable;
+    private Long stringCursor = RedisTableConstants.REDIS_DEFAULT_CURSOR;
+    private Iterator<Object[]> iterator;
 
-    public RedisIterator(Jedis jedis, List<Attribute> attributes, List<String> query, String tableName) {
+    public RedisIterator(Jedis jedis, List<Attribute> attributes, BasicCompareOperation query, String tableName,
+                         List<String> primaryKeys, List<String> indexes) {
         this.jedis = jedis;
         this.attributes = attributes;
         this.tableName = tableName;
         this.initialTraverse = true;
         this.query = query;
+        this.primaryKeys = primaryKeys;
+        this.indexes = indexes;
 
     }
 
     @Override
     public void close() throws IOException {
-        resultMap.clear();
-        scanResultsList.clear();
-        scanResult = null;
+        closeImpl();
+    }
+
+    private void closeImpl() {
+        if (Objects.nonNull(resultMap)) {
+            resultMap.clear();
+        }
+        result = null;
+        scanResultsList = null;
+        scanResults = null;
     }
 
     @Override
     public boolean hasNext() {
         if (!this.preFetched) {
+            // check whether object is pre fetched
             this.nextValue = this.next();
             this.preFetched = true;
         }
-        // TODO: 2/14/18 Check whether sending null is ok rather than sending a empty object[]
-        return nextValue.length == 0;
+        return nextValue != null;
     }
 
     @Override
     public Object[] next() {
-        List<Object[]> resultsList = new ArrayList<>();
         if (this.preFetched) {
             this.preFetched = false;
-            Object[] result = this.nextValue;
+            Object[] record = this.nextValue;
             this.nextValue = null;
-            return result;
+            return record;
         }
-        try {
-            if (initialTraverse) {
-                resultsList = fetchResults();
-                initialTraverse = false;
+        List<Object[]> finalResult;
+        if (initialTraverse) {
+            finalResult = fetchResults();
+            initialTraverse = false;
+            this.iterator = finalResult.listIterator();
+            if (finalResult.isEmpty()) {
+                this.closeImpl();
+                return null;
             }
-            if (Objects.nonNull(resultsList) && resultsList.iterator().hasNext()) {
-                return resultsList.toArray();
-            } else {
-                this.close();
-                return new Object[0];
+        }
+        if (!iterator.hasNext()) {
+            scanResultsList.clear();
+            finalResult = fetchResults();
+            this.iterator = finalResult.listIterator();
+            if (finalResult.isEmpty()) {
+                this.closeImpl();
+                return null;
             }
-        } catch (Exception e) {
-            throw new RedisIteratorException("Error while retrieving records from table " + this.tableName + " : " +
-                    "" + e.getMessage(), e);
+            return iterator.next();
+        } else {
+            return iterator.next();
         }
 
     }
@@ -88,135 +131,154 @@ public class RedisIterator implements RecordIterator<Object[]> {
         //Do nothing. This is a read only iterator
     }
 
-    @Override
-    protected void finalize() throws Throwable {
-        this.close();
-        super.finalize();
-    }
-
     private List<Object[]> fetchResults() {
         List<Object[]> resultList = new ArrayList<>();
-        ScanParams scanParams = new ScanParams();
-        scanParams.match(tableName + ":*");
-        scanParams.count(RedisTableConstants.REDIS_BATCH_SIZE);
-        this.scanResult = jedis.scan("0", scanParams);
-        this.scanResultsList = scanResult.getResult();
-        while (Long.parseLong(this.scanResult.getStringCursor()) > 0) {
-            this.scanResult = jedis.scan(scanResult.getStringCursor(), scanParams);
-            this.scanResultsList.add(scanResult.getResult());
-        }
 
+        if (Objects.nonNull(query) &&
+                !("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
+            return fetchResultsWithCondition();
 
-        if (scanResultsList.iterator().hasNext()) {
-            resultMap = jedis.hgetAll(scanResultsList.iterator().next().toString());
-            resultList = filterResult(resultMap, query);
+        } else if (Objects.nonNull(query) &&
+                ("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
+
+            return fetchAllResults();
         }
         return resultList;
     }
 
-    private List<Object[]> filterResult(Map<String, String> resultsMap, List<String> query) {
-        List<Object[]> filteredResults = new ArrayList<>();
-        Object[] result = new Object[attributes.size()];
+    private List<Object[]> fetchResultsWithCondition() {
+        List<Object[]> resultList = new ArrayList<>();
 
+        storeVariable = query
+                .getStoreVariable();
+        streamVariable = query
+                .getStreamVariable();
+        if (indexes.contains(storeVariable.getName())) {
+            return fetchResultsByIndexedValue();
+        } else if (primaryKeys.contains(storeVariable.getName())) {
+            return fetchResultsByPrimaryKey();
+        }
+        return resultList;
+    }
+
+    private List<Object[]> fetchResultsByPrimaryKey() {
+        List<Object[]> resultList = new ArrayList<>();
+        if (isInitialTraverse) {
+            resultMap = jedis.hgetAll(tableName + ":" + streamVariable.getName());
+            if (Objects.nonNull(resultMap) && !resultMap.isEmpty()) {
+                result = resultsGenerator(resultMap);
+                resultList.add(result);
+                isInitialTraverse = false;
+            }
+        } else {
+            return resultList;
+        }
+        return resultList;
+    }
+
+    private List<Object[]> fetchResultsByIndexedValue() {
+        List<Object[]> resultList = new ArrayList<>();
+        ScanParams scanParams = new ScanParams();
+        scanParams.count(RedisTableConstants.REDIS_BATCH_SIZE);
+        if (isInitialTraverse) {
+            isInitialTraverse = false;
+            scanResultsList = fetchBatchOfResultsFromIndexTable(scanParams);
+            if (scanResultsList.isEmpty()) {
+                return resultList;
+            }
+        }
+        if (scanResultsList.isEmpty() && stringCursor > 0) {
+            scanResultsList = fetchBatchOfResultsFromIndexTable(scanParams);
+            if (scanResultsList.isEmpty()) {
+                return resultList;
+            }
+        } else if (scanResultsList.isEmpty() && stringCursor == 0) {
+            return resultList;
+        }
+        scanResultsList.forEach(scanResult -> {
+            resultMap = jedis.hgetAll(scanResult.toString());
+            if (Objects.nonNull(resultMap)) {
+                result = resultsGenerator(resultMap);
+                resultList.add(result);
+            }
+        });
+        return resultList;
+    }
+
+    private List fetchBatchOfResultsFromIndexTable(ScanParams scanParams) {
+
+        scanResults = jedis.sscan(tableName + ":" + storeVariable.getName() + ":"
+                + streamVariable.getName(), String.valueOf(stringCursor), scanParams);
+        stringCursor = Long.valueOf(scanResults.getStringCursor());
+        return scanResults.getResult();
+    }
+
+    private List<Object[]> fetchAllResults() {
+        List<Object[]> resultList = new ArrayList<>();
+        if (isInitialTraverse) {
+            isInitialTraverse = false;
+            this.scanResultsList = fetchBatchOfResultsFromTable();
+            if (scanResultsList.isEmpty()) {
+                return resultList;
+            }
+        } else if (scanResultsList.isEmpty() && stringCursor > 0) {
+            this.scanResultsList = fetchBatchOfResultsFromTable();
+            if (scanResultsList.isEmpty()) {
+                return resultList;
+            }
+        } else if (scanResultsList.isEmpty() && stringCursor == 0) {
+            return resultList;
+        }
+
+        scanResultsList.forEach(e -> {
+            String type = jedis.type(e.toString());
+            if (type.equalsIgnoreCase("hash")) {
+                resultMap = jedis.hgetAll(e.toString());
+                if (Objects.nonNull(resultMap)) {
+                    result = resultsGenerator(resultMap);
+                    resultList.add(result);
+                }
+            }
+        });
+        return resultList;
+    }
+
+    private List fetchBatchOfResultsFromTable() {
+        ScanParams scanParams = new ScanParams();
+        scanParams.match(tableName + ":*");
+        scanParams.count(RedisTableConstants.REDIS_BATCH_SIZE);
+        scanResults = jedis.scan(String.valueOf(stringCursor), scanParams);
+        stringCursor = Long.valueOf(scanResults.getStringCursor());
+        return scanResults.getResult();
+    }
+
+
+    private Object[] resultsGenerator(Map<String, String> resultMap) {
+        Object[] generatedResult = new Object[attributes.size()];
         int i = 0;
-        for (String subQuery : query) {
-            if (query.size() > 3) {
-                i++;
-                if (subQuery.equals(RedisTableConstants.JAVA_AND)) {
+        for (Attribute attribute : this.attributes) {
+            switch (attribute.getType()) {
+                case BOOL:
+                    generatedResult[i++] = Boolean.parseBoolean(resultMap.get(attribute.getName
+                            ()));
                     break;
-                } else if (subQuery.equals(RedisTableConstants.JAVA_OR)) {
+                case INT:
+                    generatedResult[i++] = Integer.parseInt(resultMap.get(attribute.getName()));
                     break;
-                } else if (subQuery.equals(RedisTableConstants.JAVA_NOT)) {
+                case LONG:
+                    generatedResult[i++] = Long.parseLong(resultMap.get(attribute.getName()));
                     break;
-                } else if (subQuery.equals(RedisTableConstants.JAVA_NULL)) {
+                case FLOAT:
+                    generatedResult[i++] = Float.parseFloat(resultMap.get(attribute.getName()));
                     break;
-                }
-            } else {
-                i++;
-                if (subQuery.equals(RedisTableConstants.EQUAL)) {
-                    switch (fetchAttributeType(query.get(i - 1))) {
-                        case STRING:
-                            if (resultsMap.get(query.get(i - 1)).equals(query.get(i + 1))) {
-                            }
-                            break;
-                        default:
-                            if (resultsMap.get(query.get(i - 1)) == query.get(i + 1)) {
-                                break;
-                            }
-                    }
-
-                }
+                case DOUBLE:
+                    generatedResult[i++] = Double.parseDouble(resultMap.get(attribute.getName()));
+                    break;
+                default:
+                    generatedResult[i++] = resultMap.get(attribute.getName());
+                    break;
             }
         }
-
-        return filteredResults;
-    }
-
-
-//        while (Objects.nonNull(query)) {
-////            ListIterator<String> queryIterator = query.listIterator();
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-////            switch (queryIterator.next()) {
-////                case RedisTableConstants.JAVA_AND:
-////                    String operator = query.get(queryIterator.previousIndex() - 1);
-////                    switch (operator) {
-////                        case RedisTableConstants.EQUAL:
-////                            break;
-////                        case RedisTableConstants.GREATER_THAN:
-////                            break;
-////                        case RedisTableConstants.LESS_THAN:
-////                            break;
-////                        case RedisTableConstants.LESS_THAN_EQUAL:
-////                            break;
-////                        case RedisTableConstants.GREATER_THAN_EQUAL:
-////                            break;
-////                    }
-////                    break;
-////                case RedisTableConstants.JAVA_OR:
-////                    break;
-////                case RedisTableConstants.JAVA_NOT:
-////                    break;
-////                case RedisTableConstants.JAVA_NULL:
-////                    break;
-////                default:
-////                    break;
-////            }
-//        }
-
-    private Attribute.Type fetchAttributeType(String field) {
-        for (Attribute attribute : attributes) {
-            if (attribute.getName().equals(field)) {
-                return attribute.getType();
-            }
-        }
-        return null;
-    }
-//
-//    private List<Object[]> resultFilter(List<Object[]> resultList) {
-//        List<Object[]> filteredResuls = new ArrayList<>();
-//        return filteredResuls;
-//    }
-//    }
+        return generatedResult;
     }
 }

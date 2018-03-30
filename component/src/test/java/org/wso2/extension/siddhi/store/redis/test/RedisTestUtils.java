@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2017, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -19,6 +19,43 @@
 package org.wso2.extension.siddhi.store.redis.test;
 
 
-class RedisTestUtils {
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.ScanParams;
+import redis.clients.jedis.ScanResult;
 
+public class RedisTestUtils {
+    private static final String HOST = "localhost";
+    private static JedisPool jedisPool;
+    private static Jedis jedis;
+
+    private static void createConnectionPool() throws ConnectionUnavailableException {
+        jedisPool = new JedisPool(new JedisPoolConfig(), HOST);
+        try {
+            jedis = jedisPool.getResource();
+        } catch (Exception e) {
+            throw new ConnectionUnavailableException("Error while initializing the Redis connection to host : "
+                    + HOST + " : "
+                    + e
+                    .getMessage
+                            (), e);
+        }
+    }
+
+    public static int getRowsFromTable(String tableName) throws ConnectionUnavailableException {
+        createConnectionPool();
+        int rowCount;
+        ScanParams scanParams = new ScanParams();
+        scanParams.match(tableName + ":");
+        scanParams.count(100);
+        ScanResult result = jedis.scan("0", scanParams);
+        rowCount = result.getResult().size();
+        return rowCount;
+    }
+
+    public static void cleanRedisDatabase() {
+        jedis.flushAll();
+    }
 }

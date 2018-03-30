@@ -1,38 +1,54 @@
+/*
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ *
+ * WSO2 Inc. licenses this file to you under the Apache License,
+ * Version 2.0 (the "License"); you may not use this file except
+ * in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing,
+ * software distributed under the License is distributed on an
+ * "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+ * KIND, either express or implied.  See the License for the
+ * specific language governing permissions and limitations
+ * under the License.
+ */
+
 package org.wso2.extension.siddhi.store.redis;
 
-import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
+import org.wso2.siddhi.core.exception.OperationNotSupportedException;
 import org.wso2.siddhi.core.table.record.BaseExpressionVisitor;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.expression.condition.Compare;
-
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * Redis Condition Visitor class
  **/
 public class RedisConditionVisitor extends BaseExpressionVisitor {
 
-    private List<String> conditionsList;
     private boolean isBeginCompareRightOperand;
     private boolean isStoreVariableOnRight;
-    private String currentStoreVariable;
-    private String currentStreamVariable;
+    private volatile BasicCompareOperation currentOperation;
 
-    public RedisConditionVisitor() {
-        conditionsList = new ArrayList<>();
+
+    RedisConditionVisitor() {
+        currentOperation = new BasicCompareOperation();
     }
 
-    public List<String> returnCondition() {
-        return conditionsList;
+    public BasicCompareOperation returnCondition() {
+        return currentOperation;
     }
 
     @Override
     public void beginVisitAnd() {
+        //Not applicable
     }
 
     @Override
     public void endVisitAnd() {
+        //Not applicable
     }
 
     @Override
@@ -47,7 +63,7 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitAndRightOperand() {
-        conditionsList.add(RedisTableConstants.JAVA_AND);
+        //Not applicable
     }
 
     @Override
@@ -57,12 +73,12 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitOr() {
-
+        //Not applicable
     }
 
     @Override
     public void endVisitOr() {
-
+        //Not applicable
     }
 
     @Override
@@ -77,7 +93,7 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitOrRightOperand() {
-        conditionsList.add(RedisTableConstants.JAVA_OR);
+        //Not applicable
     }
 
     @Override
@@ -87,7 +103,7 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitNot() {
-        conditionsList.add(RedisTableConstants.JAVA_NOT);
+        //Not applicable
     }
 
     @Override
@@ -97,21 +113,17 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitCompare(Compare.Operator operator) {
-
+        this.currentOperation = new BasicCompareOperation();
     }
 
     @Override
     public void endVisitCompare(Compare.Operator operator) {
-
-//        condition.append(RedisTableConstants.CLOSE_PARENTHESIS);
+        //Not applicable
     }
 
     @Override
     public void beginVisitCompareLeftOperand(Compare.Operator operator) {
-        if (operator == Compare.Operator.NOT_EQUAL) {
-            conditionsList.add(RedisTableConstants.NOT_EQUAL);
-
-        }
+        //Not applicable
     }
 
     @Override
@@ -127,69 +139,39 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void endVisitCompareRightOperand(Compare.Operator operator) {
         if (!isStoreVariableOnRight) {
-            conditionsList.add(currentStoreVariable);
-            switch (operator) {
-                case EQUAL:
-                    conditionsList.add(RedisTableConstants.EQUAL);
-                    break;
-                case GREATER_THAN:
-                    conditionsList.add(RedisTableConstants.GREATER_THAN);
-                    break;
-                case GREATER_THAN_EQUAL:
-                    conditionsList.add(RedisTableConstants.GREATER_THAN_EQUAL);
-                    break;
-                case LESS_THAN:
-                    conditionsList.add(RedisTableConstants.LESS_THAN);
-                    break;
-                case LESS_THAN_EQUAL:
-                    conditionsList.add(RedisTableConstants.LESS_THAN_EQUAL);
-                    break;
-                case NOT_EQUAL:
-                    conditionsList.add(RedisTableConstants.NOT_EQUAL);
-                    break;
+            if (operator.equals(Compare.Operator.EQUAL)) {
+                currentOperation.setOperator(Compare.Operator.EQUAL);
+            } else {
+                throw new OperationNotSupportedException("Redis store extension does not support comparison " +
+                        "operations " +
+                        "other than EQUAL operation");
             }
-            conditionsList.add(currentStreamVariable);
         } else {
             isStoreVariableOnRight = false;
-            conditionsList.add(currentStoreVariable);
-            switch (operator) {
-                case EQUAL:
-                    conditionsList.add(RedisTableConstants.EQUAL);
-                    break;
-                case GREATER_THAN:
-                    conditionsList.add(RedisTableConstants.LESS_THAN);
-                    break;
-                case GREATER_THAN_EQUAL:
-                    conditionsList.add(RedisTableConstants.LESS_THAN_EQUAL);
-                    break;
-                case LESS_THAN:
-                    conditionsList.add(RedisTableConstants.GREATER_THAN);
-                    break;
-                case LESS_THAN_EQUAL:
-                    conditionsList.add(RedisTableConstants.GREATER_THAN_EQUAL);
-                    break;
-                case NOT_EQUAL:
-                    conditionsList.add(RedisTableConstants.NOT_EQUAL);
-                    break;
+            if (operator.equals(Compare.Operator.EQUAL)) {
+                currentOperation.setOperator(Compare.Operator.EQUAL);
+            } else {
+                throw new OperationNotSupportedException("Redis store extension does not " +
+                        "support comparison " +
+                        "operations " +
+                        "other than EQUAL operation");
             }
-            conditionsList.add(currentStreamVariable);
         }
     }
 
     @Override
     public void beginVisitIsNull(String streamId) {
-        conditionsList.add(RedisTableConstants.JAVA_NULL);
+        //Not applicable
     }
 
     @Override
     public void endVisitIsNull(String streamId) {
-        conditionsList.add(currentStoreVariable);
-        conditionsList.add(RedisTableConstants.JAVA_NULL);
+        //Not applicable
     }
 
     @Override
     public void beginVisitIn(String storeId) {
-//        condition.append(RDBMSTableConstants.SQL_IN).append(RDBMSTableConstants.WHITESPACE);
+        //Not applicable
     }
 
     @Override
@@ -204,7 +186,9 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void endVisitConstant(Object value, Attribute.Type type) {
-        currentStreamVariable = value.toString();
+        StreamVariable streamVariable = new StreamVariable(value.toString());
+        currentOperation.setStreamVariable(streamVariable);
+
     }
 
     @Override
@@ -260,7 +244,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitStreamVariable(String id, String streamId, String attributeName, Attribute.Type type) {
-        currentStreamVariable = RedisTableConstants.OPEN_SQURE_BRACKETS + id + RedisTableConstants.CLOSE_SQURE_BRACKETS;
+        StreamVariable streamVariable = new StreamVariable(id);
+        currentOperation.setStreamVariable(streamVariable);
     }
 
     @Override
@@ -273,7 +258,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
         if (isBeginCompareRightOperand) {
             isStoreVariableOnRight = true;
         }
-        currentStoreVariable = attributeName;
+        StoreVariable storeVariable = new StoreVariable(attributeName);
+        currentOperation.setStoreVariable(storeVariable);
     }
 
     @Override

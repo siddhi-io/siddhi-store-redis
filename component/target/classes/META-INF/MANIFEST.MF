@@ -1,6 +1,6 @@
 Manifest-Version: 1.0
-Bnd-LastModified: 1519124659828
-Build-Jdk: 1.8.0_151
+Bnd-LastModified: 1522384360898
+Build-Jdk: 1.8.0_162
 Built-By: anusha
 Bundle-Contributors: WSO2 Inc
 Bundle-Copyright: WSO2 Inc
@@ -41,5 +41,5 @@ Import-Package: javax.management;resolution:=optional,net.sf.cglib.proxy
  =optional;version="[4.0,5)",org.wso2.siddhi.query.api.util;resolution:=
  optional;version="[4.0,5)"
 Require-Capability: osgi.ee;filter:="(&(osgi.ee=JavaSE)(version=1.8))"
-SCM-Revision: 2018-02-20T11:04:05Z
+SCM-Revision: ae2afb8a0b571e732885baf5a7dd4337c1e08a96
 Tool: Bnd-3.0.0.201509101326

@@ -50,9 +50,9 @@
     <tr>
         <td style="vertical-align: top">password</td>
         <td style="vertical-align: top; word-wrap: break-word">password to connect to redis server</td>
-        <td style="vertical-align: top"></td>
+        <td style="vertical-align: top">will try to connect without authenticate</td>
         <td style="vertical-align: top">STRING</td>
-        <td style="vertical-align: top">No</td>
+        <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
 </table>
@@ -60,7 +60,7 @@
 <span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
-@store(type='redis',hoslogt='localhost',port=6379, password='root',table.name='fooTable')define table fooTable(time long, date String)
+@store(type='redis',host='localhost',port=6379, password='root',table.name='fooTable')define table fooTable(time long, date String)
 ```
 <p style="word-wrap: break-word">above collection will create a redis table with the name FooTable</p>
 

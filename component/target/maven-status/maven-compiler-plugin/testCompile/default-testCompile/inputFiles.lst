@@ -1,1 +1,6 @@
-/home/anusha/WSO2/Sources/WSO2-extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/RedisTestUtils.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/UpdateRedisTableTestCase.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/DeleteFromRedisTableTestCase.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/DefineRedisTableTestCase.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/UpdateOrInsertRedisTableTestCase.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/InsertIntoRedisTableTestCase.java
+/Users/anusha/wso2/source/extensions/siddhi-store-redis/component/src/test/java/org/wso2/extension/siddhi/store/redis/test/RedisTestUtils.java
