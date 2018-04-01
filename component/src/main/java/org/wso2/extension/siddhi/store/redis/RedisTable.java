@@ -20,6 +20,8 @@ package org.wso2.extension.siddhi.store.redis;
 
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
+import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.annotation.Example;
@@ -347,8 +349,8 @@ public class RedisTable extends AbstractRecordTable {
                 }
                 jedis.del(tableName + ":" + storeVariable.getName() + ":" + streamVariable.getName());
             } else {
-                throw new OperationNotSupportedException("Cannot delete records by  '"
-                        .concat(storeVariable.getName()).concat("' since the field is nether indexed nor primary key"));
+                throw new OperationNotSupportedException("Cannot delete records by  '" + storeVariable.getName() +
+                        "' since the field is nether indexed nor primary key");
             }
         }
     }

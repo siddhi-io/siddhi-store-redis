@@ -57,6 +57,7 @@ public class InsertIntoRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 6, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -85,6 +86,8 @@ public class InsertIntoRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 3, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
     @Test
@@ -112,42 +115,17 @@ public class InsertIntoRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 3, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
-    @Test(expectedExceptions = ConnectionUnavailableException.class)
-    public void insertIntoRedisTableTest4() throws InterruptedException, ConnectionUnavailableException {
-        SiddhiManager siddhiManager = new SiddhiManager();
-        String streams = "" +
-                "define stream StockStream (name string, amount double);" +
-                "@store(type='redis', host='differentHost', " +
-                "port='6379', password= 'root')" +
-                "@PrimaryKey('name')" +
-                "@index('amount')" +
-                "define table fooTable(name string, amount double); ";
-
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from StockStream " +
-                "insert into fooTable; ";
-        LOG.info(streams + query);
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
-        siddhiAppRuntime.start();
-        stockStream.send(new Object[]{"WSO2", 100.0});
-        stockStream.send(new Object[]{"IBM", 1001});
-        stockStream.send(new Object[]{"MSFT", 1001.0});
-
-        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
-        Assert.assertEquals(totalRowsInTable, 6, "Definition/Insertion failed");
-        siddhiAppRuntime.shutdown();
-    }
 
     @Test
     public void insertIntoRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
-                "@store(type='redis', host='differentHost', " +
+                "@store(type='redis', host='localhost', " +
                 "port='6379', table.name='fooTable', password= 'root')" +
                 "@index('amount')" +
                 "define table fooTable(name string, amount double); ";
@@ -167,5 +145,7 @@ public class InsertIntoRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 6, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 }

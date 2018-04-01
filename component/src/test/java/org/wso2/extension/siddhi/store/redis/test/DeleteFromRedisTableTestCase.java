@@ -27,7 +27,7 @@ import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
-import org.wso2.siddhi.core.exception.OperationNotSupportedException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 
 public class DeleteFromRedisTableTestCase {
@@ -50,22 +50,23 @@ public class DeleteFromRedisTableTestCase {
         // Testing simple deletion with primary keys.
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
-                "@PrimaryKey('symbol')" +
-                "@index('price')" +
-                "define table StockTable (symbol string, price string, volume long); ";
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
+                "@PrimaryKey('symbol') " +
+                "@index('price') " +
+                "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
                 "@info(name = 'query1') " +
                 "from StockStream " +
-                "insert into StockTable ;" +
-                "" +
+                "insert into StockTable; " +
+                " " +
                 "@info(name = 'query2') " +
                 "from DeleteStockStream " +
                 "delete StockTable " +
-                "   on StockTable.symbol == symbol ;";
+                "  on StockTable.symbol == symbol; ";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
@@ -80,8 +81,10 @@ public class DeleteFromRedisTableTestCase {
         Thread.sleep(1000);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
-        Assert.assertEquals(totalRowsInTable, 1, "Deletion failed");
+        Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
@@ -90,11 +93,12 @@ public class DeleteFromRedisTableTestCase {
         log.info("deleteFromRedisTableTest2");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
-                "@PrimaryKey('symbol')" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
+                "@PrimaryKey('symbol') " +
                 "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
                 "@info(name = 'query1') " +
@@ -121,6 +125,8 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 1, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
@@ -129,11 +135,12 @@ public class DeleteFromRedisTableTestCase {
         log.info("deleteFromRedisTableTest3");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
-                "@PrimaryKey('symbol')" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
+                "@PrimaryKey('symbol') " +
                 "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
                 "@info(name = 'query1') " +
@@ -159,6 +166,8 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest3")
@@ -167,11 +176,12 @@ public class DeleteFromRedisTableTestCase {
         log.info("deleteFromRedisTableTest4");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
-                "@PrimaryKey('symbol')" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
+                "@PrimaryKey('symbol') " +
                 "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
                 "@info(name = 'query1') " +
@@ -197,18 +207,21 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
-    @Test(dependsOnMethods = "deleteFromRedisTableTest4", expectedExceptions = OperationNotSupportedException.class)
-    public void deleteFromRedisTableTest5() throws InterruptedException {
+    @Test(dependsOnMethods = "deleteFromRedisTableTest4", expectedExceptions = SiddhiAppCreationException.class)
+    public void deleteFromRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with conditions. Expected to throw an exception since it is not supported.
         log.info("deleteFromRedisTableTest5");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
                 "@PrimaryKey('symbol')" +
                 "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
@@ -233,6 +246,8 @@ public class DeleteFromRedisTableTestCase {
         Thread.sleep(1000);
 
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest4")
@@ -242,10 +257,11 @@ public class DeleteFromRedisTableTestCase {
         log.info("deleteFromRedisTableTest6");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
                 "@PrimaryKey('symbol')" +
                 "define table StockTable (symbol string, price float, volume long); ";
         String query = "" +
@@ -272,7 +288,10 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 0, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
+
     @Test(dependsOnMethods = "deleteFromRedisTableTest6")
     public void deleteFromRedisTableTest7() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with true condition. This will delete all the records in the table with indexed
@@ -280,10 +299,11 @@ public class DeleteFromRedisTableTestCase {
         log.info("deleteFromRedisTableTest7");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
-                "define stream StockStream (symbol string, price string, volume long); " +
-                "define stream UpdateStockStream (symbol string, price string, volume long); " +
-                "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream DeleteStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379'," +
+                "password='root') " +
                 "@PrimaryKey('symbol') " +
                 "@index('price') " +
                 "define table StockTable (symbol string, price float, volume long); ";
@@ -295,7 +315,7 @@ public class DeleteFromRedisTableTestCase {
                 "@info(name = 'query2') " +
                 "from DeleteStockStream " +
                 "delete StockTable " +
-                "on StockTable.price = price; ";
+                "on StockTable.price == price; ";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
@@ -309,7 +329,9 @@ public class DeleteFromRedisTableTestCase {
         Thread.sleep(1000);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
-        Assert.assertEquals(totalRowsInTable, 1, "Deletion failed");
+        Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
 }

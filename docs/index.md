@@ -1,23 +1,21 @@
 Siddhi-store-redis
 ======================================
 
-The **siddhi-store-redis extension** is an extension for siddhi Solr event table implementation. This extension can be 
+The **siddhi-store-redis extension** is an extension for siddhi redis event table implementation. This extension can be 
 used to persist events to a
-Solr cloud instance of version 6.x.x.
+Redis instance of version 4.x.x.
 
 Find some useful links below:
 
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr">Source code</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr/releases">Releases</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr/issues">Issue tracker</a>
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-Redis">Source code</a>
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-Redis/releases">Releases</a>
+* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-Redis/issues">Issue tracker</a>
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-solr/api/1.0.15">1.0.15</a>.
 
 ## Prerequisites
- - A Default configset needs to be uploaded to the zookeper of SolrCloud (If you test in your local machine, you can
- start the Solr cloud using  command "./solr -e cloud" and upload the "basic_configs" configset)
+ - Redis Server instance should be started and ready to connect via redis java API.
 
 ## How to use 
 
@@ -25,7 +23,7 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 * You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> that is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support. 
 
-* This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this extension you can replace the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
+* This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this extension you can replace the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
 
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
@@ -33,8 +31,8 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 ```
      <dependency>
-        <groupId>org.wso2.extension.siddhi.store.solr</groupId>
-        <artifactId>siddhi-store-solr</artifactId>
+        <groupId>org.wso2.extension.siddhi.store.redis</groupId>
+        <artifactId>siddhi-store-redis</artifactId>
         <version><version>x.x.x</version></version>
      </dependency>
 ```
@@ -45,19 +43,24 @@ Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/si
 
 |  Branch | Build Status |
 | :------ |:------------ | 
-| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-solr/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-solr/) |
+| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-redis/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-redis/) |
 
 ---
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-solr/api/1.0.15/#solr-store">solr</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>)*<br><div style="padding-left: 1em;"><p>Solr store implementation uses solr collections for underlying data storage. The events are converted to Solr documents when the events are inserted to solr store. Solr documents are converted to Events when the Solr documents are read from solr collections. This can only be used with the Solr cloud mode.</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.15/#redis-store">redis</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>)*<br><div style="padding-left: 1em;"><p>
+Redis store implementation uses redis hashes for underlying data storage. The events 
+are 
+converted to redis hash sets when the events are inserted to redis store. redis hash sets are converted to Events when 
+the 
+redis hashes are read from redis database. </p></div>
 
 ## How to Contribute
  
-  * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr/issues">GitHub Issue Tracker</a>.
+  * Please report issues at <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/issues">GitHub Issue Tracker</a>.
   
-  * Send your contributions as pull requests to <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-solr/tree/master">master branch</a>. 
+  * Send your contributions as pull requests to <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/tree/master">master branch</a>. 
  
 ## Contact us 
 

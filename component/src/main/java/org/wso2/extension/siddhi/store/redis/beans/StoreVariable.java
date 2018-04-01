@@ -1,4 +1,4 @@
-package org.wso2.extension.siddhi.store.redis;
+package org.wso2.extension.siddhi.store.redis.beans;
 
 
 /**
@@ -9,7 +9,7 @@ package org.wso2.extension.siddhi.store.redis;
 public class StoreVariable {
     private String name;
 
-    StoreVariable(String name) {
+    public StoreVariable(String name) {
         this.name = name;
     }
 

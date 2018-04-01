@@ -57,6 +57,7 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -85,6 +86,7 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 4, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -111,34 +113,15 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
     }
 
-    @Test(expectedExceptions = ConnectionUnavailableException.class)
-    public void defineRedisTableTest4() throws InterruptedException, ConnectionUnavailableException {
-        SiddhiManager siddhiManager = new SiddhiManager();
-        String streams = "" +
-                "define stream StockStream (name string, amount double);" +
-                "@store(type='redis', host='differentHost', " +
-                "port='6379', table.name='fooTable', password= 'root')" +
-                "@PrimaryKey('name')" +
-                "@index('amount')" +
-                "define table fooTable(name string, amount double); ";
-
-        String query = "" +
-                "@info(name = 'query1') " +
-                "from StockStream " +
-                "insert into fooTable; ";
-        LOG.info(streams + query);
-        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-        siddhiAppRuntime.start();
-        siddhiAppRuntime.shutdown();
-    }
     @Test
     public void defineRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
-                "@store(type='redis', host='differentHost', " +
+                "@store(type='redis', host='localhost', " +
                 "port='6379', table.name='fooTable', password= 'root')" +
                 "@index('amount')" +
                 "define table fooTable(name string, amount double); ";
@@ -155,7 +138,8 @@ public class DefineRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 1001});
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
-        Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
+        Assert.assertEquals(totalRowsInTable, 4, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
     }
 }

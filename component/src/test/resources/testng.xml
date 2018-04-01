@@ -24,6 +24,12 @@
         <classes>
             <class name="org.wso2.extension.siddhi.store.redis.test.RedisTestUtils"/>
             <class name="org.wso2.extension.siddhi.store.redis.test.DefineRedisTableTestCase"/>
+            <class name="org.wso2.extension.siddhi.store.redis.test.DeleteFromRedisTableTestCase"/>
+            <class name="org.wso2.extension.siddhi.store.redis.test.InsertIntoRedisTableTestCase"/>
+            <class name="org.wso2.extension.siddhi.store.redis.test.ReadFromRedisTableTestCase"/>
+            <class name="org.wso2.extension.siddhi.store.redis.test.UpdateRedisTableTestCase"/>
+            <class name="org.wso2.extension.siddhi.store.redis.test.UpdateOrInsertRedisTableTestCase"/>
+
         </classes>
     </test>
 </suite>

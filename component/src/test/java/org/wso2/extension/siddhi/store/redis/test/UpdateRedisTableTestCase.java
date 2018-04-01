@@ -24,25 +24,29 @@ import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
-import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
 import org.wso2.siddhi.core.event.Event;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
+import org.wso2.siddhi.core.util.SiddhiTestHelper;
+
+import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class UpdateRedisTableTestCase {
     private static final Logger log = Logger.getLogger(UpdateRedisTableTestCase.class);
-    private int inEventCount;
+    private AtomicInteger inEventCount = new AtomicInteger();
     private boolean eventArrived;
     private int removeEventCount;
     private static final String TABLE_NAME = "fooTable";
 
     @BeforeMethod
     public void init() {
-        inEventCount = 0;
+        inEventCount.set(0);
         removeEventCount = 0;
         eventArrived = false;
     }
@@ -57,19 +61,19 @@ public class UpdateRedisTableTestCase {
         log.info("== Redis Table UPDATE tests completed ==");
     }
 
-    public static void cleanDB() {
+    public static void cleanDB() throws ConnectionUnavailableException {
         RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
-    public void updateFromTableTest1() throws InterruptedException {
+    public void updateFromTableTest1() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when a primary key condition is true.
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
                 "define stream UpdateStockStream (symbol string, price string, volume long); " +
                 "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price string, volume long); ";
@@ -98,8 +102,8 @@ public class UpdateRedisTableTestCase {
                 log.info(inEvents);
                 if (inEvents != null) {
                     for (Event event : inEvents) {
-                        inEventCount++;
-                        switch (inEventCount) {
+                        inEventCount.incrementAndGet();
+                        switch (inEventCount.get()) {
                             case 1:
                                 AssertJUnit.assertArrayEquals(new Object[]{"IBM", "75.6", 100L}, event.getData());
                                 break;
@@ -107,7 +111,7 @@ public class UpdateRedisTableTestCase {
                                 AssertJUnit.assertArrayEquals(new Object[]{"WSO2", "57.6", 100L}, event.getData());
                                 break;
                             default:
-                                AssertJUnit.assertSame(2, inEventCount);
+                                AssertJUnit.assertSame(2, inEventCount.get());
                         }
                     }
                     eventArrived = true;
@@ -132,25 +136,24 @@ public class UpdateRedisTableTestCase {
 
         checkStockStream.send(new Object[]{"IBM", "75.6", 100L});
         checkStockStream.send(new Object[]{"WSO2", "57.6", 100L});
-        Thread.sleep(1000);
-
-        AssertJUnit.assertEquals("Number of success events", 2, inEventCount);
+        SiddhiTestHelper.waitForEvents(1000, 2, inEventCount, 6000);
+        AssertJUnit.assertEquals("Number of success events", 2, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();
         cleanDB();
     }
 
-    @Test(dependsOnMethods = "updateFromTableTest1", expectedExceptions = RedisTableException.class)
-    public void updateFromTableTest2() throws InterruptedException {
-        //Check for update event data in Redis table when multiple key conditions are true.
+    @Test
+    public void updateFromTableTest2() throws InterruptedException, ConnectionUnavailableException {
+        //Check for update event data in Redis table when index key are not present;
         log.info("updateFromTableTest2");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
                 "define stream UpdateStockStream (symbol string, price string, volume long); " +
                 "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price string, volume long); ";
@@ -163,10 +166,11 @@ public class UpdateRedisTableTestCase {
                 "@info(name = 'query2') " +
                 "from UpdateStockStream " +
                 "update StockTable " +
-                "   on StockTable.volume == volume;" +
+                "set StockTable.volume = volume" +
+                "   on StockTable.price == price;" +
                 "" +
                 "@info(name = 'query3') " +
-                "from CheckStockStream[(symbol==StockTable.symbol) and (volume==StockTable.volume) in StockTable] " +
+                "from CheckStockStream[(symbol==StockTable.symbol) in StockTable] " +
                 "insert into OutStream;";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
@@ -177,8 +181,8 @@ public class UpdateRedisTableTestCase {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
                 if (inEvents != null) {
                     for (Event event : inEvents) {
-                        inEventCount++;
-                        switch (inEventCount) {
+                        inEventCount.incrementAndGet();
+                        switch (inEventCount.get()) {
                             case 1:
                                 AssertJUnit.assertArrayEquals(new Object[]{"IBM", 75.6, 100L}, event.getData());
                                 break;
@@ -189,7 +193,7 @@ public class UpdateRedisTableTestCase {
                                 AssertJUnit.assertArrayEquals(new Object[]{"WSO2", 57.6, 100L}, event.getData());
                                 break;
                             default:
-                                AssertJUnit.assertSame(3, inEventCount);
+                                AssertJUnit.assertSame(3, inEventCount.get());
                         }
                     }
                     eventArrived = true;
@@ -218,22 +222,22 @@ public class UpdateRedisTableTestCase {
         checkStockStream.send(new Object[]{"WSO2", 57.6, 100L});
         Thread.sleep(1000);
 
-        AssertJUnit.assertEquals("Number of success events", 3, inEventCount);
+        AssertJUnit.assertEquals("Number of success events", 3, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();
         cleanDB();
     }
 
-    @Test
-    public void updateFromTableTest3() throws InterruptedException {
+    @Test(dependsOnMethods = "updateFromTableTest2", expectedExceptions = SiddhiAppCreationException.class)
+    public void updateFromTableTest3() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when a primary key condition is true.
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
                 "define stream UpdateStockStream (symbol string, price string, volume long); " +
                 "define stream CheckStockStream (symbol string, price string, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price string, volume long); ";
@@ -263,8 +267,8 @@ public class UpdateRedisTableTestCase {
                 log.info(inEvents);
                 if (inEvents != null) {
                     for (Event event : inEvents) {
-                        inEventCount++;
-                        switch (inEventCount) {
+                        inEventCount.incrementAndGet();
+                        switch (inEventCount.get()) {
                             case 1:
                                 AssertJUnit.assertArrayEquals(new Object[]{"IBM", "75.6", 100L}, event.getData());
                                 break;
@@ -272,7 +276,7 @@ public class UpdateRedisTableTestCase {
                                 AssertJUnit.assertArrayEquals(new Object[]{"WSO2", "100.0", 100L}, event.getData());
                                 break;
                             default:
-                                AssertJUnit.assertSame(2, inEventCount);
+                                AssertJUnit.assertSame(2, inEventCount.get());
                         }
                     }
                     eventArrived = true;
@@ -299,7 +303,7 @@ public class UpdateRedisTableTestCase {
         checkStockStream.send(new Object[]{"WSO2", "57.6", 100L});
         Thread.sleep(1000);
 
-        AssertJUnit.assertEquals("Number of success events", 2, inEventCount);
+        AssertJUnit.assertEquals("Number of success events", 2, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();

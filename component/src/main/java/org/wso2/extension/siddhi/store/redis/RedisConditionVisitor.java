@@ -18,6 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
+import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
+import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.siddhi.core.exception.OperationNotSupportedException;
 import org.wso2.siddhi.core.table.record.BaseExpressionVisitor;
 import org.wso2.siddhi.query.api.definition.Attribute;
@@ -43,8 +45,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitAnd() {
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("AND operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitAnd() {
@@ -73,8 +75,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitOr() {
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("OR operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitOr() {
@@ -103,8 +105,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitNot() {
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("NOT operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitNot() {
@@ -161,8 +163,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitIsNull(String streamId) {
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("IsNull operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitIsNull(String streamId) {
@@ -171,8 +173,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
 
     @Override
     public void beginVisitIn(String storeId) {
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("In operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitIn(String storeId) {
@@ -194,8 +196,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitMath(MathOperator mathOperator) {
 
-        //Not applicable
-    }
+        throw new OperationNotSupportedException("Math operations are not supported by the Redis Table " +
+                "extension. Please check your query and try again");    }
 
     @Override
     public void endVisitMath(MathOperator mathOperator) {

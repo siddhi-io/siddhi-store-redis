@@ -115,7 +115,7 @@
                         <version>2.19.1</version>
                         <executions>
                             <execution>
-                                <id>integration-test-for-solr</id>
+                                <id>integration-test-for-redis</id>
                                 <phase>integration-test</phase>
                                 <goals>
                                     <goal>integration-test</goal>
@@ -332,7 +332,6 @@
                         <suiteXmlFile>src/test/resources/testng.xml</suiteXmlFile>
                     </suiteXmlFiles>
                     <argLine>${surefireArgLine} -ea -Xmx512m</argLine>
-                    <skipTests>true</skipTests>
                 </configuration>
             </plugin>
             <plugin>

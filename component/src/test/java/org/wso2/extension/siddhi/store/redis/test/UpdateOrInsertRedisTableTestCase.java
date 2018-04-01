@@ -19,33 +19,28 @@
 package org.wso2.extension.siddhi.store.redis.test;
 
 import org.apache.log4j.Logger;
-import org.testng.AssertJUnit;
+import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
-import org.wso2.siddhi.core.event.Event;
-import org.wso2.siddhi.core.exception.OperationNotSupportedException;
-import org.wso2.siddhi.core.query.output.callback.QueryCallback;
+import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
-import org.wso2.siddhi.core.util.EventPrinter;
 
 import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class UpdateOrInsertRedisTableTestCase {
     private static final Logger log = Logger.getLogger(UpdateOrInsertRedisTableTestCase.class);
-    private int inEventCount;
-    private int removeEventCount;
-    private boolean eventArrived;
     private static final String TABLE_NAME = "StockTable";
+    private AtomicInteger count = new AtomicInteger(0);
 
     @BeforeMethod
     public void init() {
-        inEventCount = 0;
-        removeEventCount = 0;
-        eventArrived = false;
+        count.set(0);
     }
 
     @BeforeClass
@@ -59,14 +54,15 @@ public class UpdateOrInsertRedisTableTestCase {
     }
 
     @Test
-    public void updateOrInsertRedisTableTest1() throws InterruptedException, SQLException {
+    public void updateOrInsertRedisTableTest1() throws InterruptedException, SQLException,
+            ConnectionUnavailableException {
         log.info("updateOrInsertRedisTableTest1");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
                 "define stream UpdateStockStream (symbol string, price float, volume long); " +
                 "define stream CheckStockStream (symbol string, price float, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price float, volume long); ";
@@ -78,46 +74,9 @@ public class UpdateOrInsertRedisTableTestCase {
                 "@info(name = 'query2') " +
                 "from UpdateStockStream#window.timeBatch(1 sec) " +
                 "update or insert into StockTable " +
-                "   on StockTable.symbol=='IBM';" +
-                "@info(name = 'query3') " +
-                "from CheckStockStream[(symbol==StockTable.symbol) in StockTable] " +
-                "insert into OutStream;";
+                "on StockTable.symbol=='GOOG';";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
-        siddhiAppRuntime.addCallback("query3", new QueryCallback() {
-            @Override
-            public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
-                EventPrinter.print(timeStamp, inEvents, removeEvents);
-                if (inEvents != null) {
-                    for (Event event : inEvents) {
-                        inEventCount++;
-                        switch (inEventCount) {
-                            case 1:
-                                AssertJUnit.assertArrayEquals(new Object[]{"WSO2", 55.6F, 100L}, event.getData());
-                                break;
-                            case 2:
-                                AssertJUnit.assertArrayEquals(new Object[]{"IBM", 75.6F, 100L}, event.getData());
-                                break;
-                            case 3:
-                                AssertJUnit.assertArrayEquals(new Object[]{"WSO2", 57.6F, 100L}, event.getData());
-                                break;
-                            case 4:
-                                AssertJUnit.assertArrayEquals(new Object[]{"GOOG", 10.6F, 100L}, event.getData());
-                                break;
-                            default:
-                                AssertJUnit.assertSame(4, inEventCount);
-                        }
-                    }
-                    eventArrived = true;
-                }
-                if (removeEvents != null) {
-                    removeEventCount = removeEventCount + removeEvents.length;
-                }
-                eventArrived = true;
-            }
-
-        });
 
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
@@ -126,34 +85,32 @@ public class UpdateOrInsertRedisTableTestCase {
 
         stockStream.send(new Object[]{"WSO2", 55.6F, 100L});
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
-        stockStream.send(new Object[]{"WSO2", 57.6F, 100L});
+        stockStream.send(new Object[]{"FB", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
 
-        checkStockStream.send(new Object[]{"WSO2", 55.6F, 100L});
-        checkStockStream.send(new Object[]{"IBM", 75.6F, 100L});
-        checkStockStream.send(new Object[]{"WSO2", 57.6F, 100L});
-        checkStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
+        Thread.sleep(5000);
 
-        Thread.sleep(3000);
-
-        AssertJUnit.assertEquals("Number of success events", 4, inEventCount);
-        AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
-        AssertJUnit.assertEquals("Event arrived", true, eventArrived);
+        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
+        siddhiAppRuntime.shutdown();
 
         siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
 
     }
 
-    @Test(expectedExceptions = OperationNotSupportedException.class)
-    public void updateOrInsertRedisTableTest2() throws InterruptedException, SQLException {
+    @Test
+    public void updateOrInsertRedisTableTest2() throws InterruptedException, SQLException,
+            ConnectionUnavailableException {
         log.info("updateOrInsertRedisTableTest2");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
                 "define stream UpdateStockStream (symbol string, price float, volume long); " +
                 "define stream CheckStockStream (symbol string, price float, volume long); " +
-                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379,password='root'" +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price float, volume long); ";
@@ -165,31 +122,75 @@ public class UpdateOrInsertRedisTableTestCase {
                 "@info(name = 'query2') " +
                 "from UpdateStockStream#window.timeBatch(1 sec) " +
                 "update or insert into StockTable " +
-                "   on StockTable.price == price; " +
-                "@info(name = 'query3') " +
-                "from CheckStockStream[(symbol==StockTable.symbol) in StockTable] " +
-                "insert into OutStream;";
+                "   on StockTable.symbol == symbol; ";
 
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
 
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
-        InputHandler checkStockStream = siddhiAppRuntime.getInputHandler("CheckStockStream");
         siddhiAppRuntime.start();
 
-        stockStream.send(new Object[]{"WSO2", 55.6F, 100L});
-        stockStream.send(new Object[]{"IBM", 75.6F, 100L});
+        stockStream.send(new Object[]{"GOOG", 55.6F, 100L});
+        stockStream.send(new Object[]{"IBM", 55.6F, 100L});
         stockStream.send(new Object[]{"WSO2", 57.6F, 100L});
 
-        updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
+        updateStockStream.send(new Object[]{"WSO2", 20.3F, 50L});
+        Thread.sleep(3000);
 
-        checkStockStream.send(new Object[]{"WSO2", 55.6F, 100L});
-        checkStockStream.send(new Object[]{"IBM", 75.6F, 100L});
-        checkStockStream.send(new Object[]{"WSO2", 57.6F, 100L});
-        checkStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
 
+        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
 
+        siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
     }
+
+    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    public void updateOrInsertRedisTableTest3() throws InterruptedException, SQLException,
+            ConnectionUnavailableException {
+        log.info("updateOrInsertRedisTableTest3");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String streams = "" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream UpdateStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', host= 'localhost',port='6379',password='root')" +
+                "@PrimaryKey('symbol')" +
+                "@index('price')" +
+                "define table StockTable (symbol string, price float, volume long); ";
+        String query = "" +
+                "@info(name = 'query1') " +
+                "from StockStream " +
+                "insert into StockTable ;" +
+                "" +
+                "@info(name = 'query2') " +
+                "from UpdateStockStream#window.timeBatch(1 sec) " +
+                "update or insert into StockTable " +
+                "set StockTable.volume = volume +10 " +
+                "   on StockTable.price == price; ";
+
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
+        InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"GOOG", 55.6F, 100L});
+        stockStream.send(new Object[]{"IBM", 55.6F, 100L});
+        stockStream.send(new Object[]{"WSO2", 57.6F, 100L});
+
+        updateStockStream.send(new Object[]{"WSO2", 20.3F, 50L});
+
+        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
+        siddhiAppRuntime.shutdown();
+
+        siddhiAppRuntime.shutdown();
+        RedisTestUtils.cleanRedisDatabase();
+
+    }
+
 
 }

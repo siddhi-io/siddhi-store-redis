@@ -3,7 +3,7 @@ Siddhi-store-redis
 
 The **siddhi-store-redis extension** is an extension for siddhi redis event table implementation. This extension can be 
 used to persist events to a
-redis cloud instance of version 6.x.x.
+redis cloud instance of version 4.x.x.
 
 Find some useful links below:
 
@@ -13,10 +13,10 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.15">1.0.15</a>.
 
 ## Prerequisites
- -
+ 
+Redis Server instance should be started and ready to connect via redis java API.
 
 ## How to use 
 
@@ -54,13 +54,11 @@ directory.
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.15/#redis-store">redis</a> *(<a 
-target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>)*<br><div 
-style="padding-left: 1em;"><p>redis store implementation uses redis collections for underlying data storage. The events 
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.15/#redis-store">redis</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>)*<br><div style="padding-left: 1em;"><p>Redis store implementation uses redis hashes for underlying data storage. The events 
 are 
-converted to redis documents when the events are inserted to redis store. redis documents are converted to Events when 
+converted to redis hash sets when the events are inserted to redis store. redis hash sets are converted to Events when 
 the 
-redis documents are read from redis collections. This can only be used with the redis cloud mode.</p></div>
+redis hashes are read from redis database. </p></div>
 
 ## How to Contribute
  

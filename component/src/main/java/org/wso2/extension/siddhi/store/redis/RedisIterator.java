@@ -18,6 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
+import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
+import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.core.table.record.RecordIterator;
 import org.wso2.siddhi.query.api.definition.Attribute;

@@ -1,4 +1,4 @@
-package org.wso2.extension.siddhi.store.redis;
+package org.wso2.extension.siddhi.store.redis.beans;
 
 /**
  * Class denoting a stream variable, which will contain a type and a name.
@@ -6,7 +6,7 @@ package org.wso2.extension.siddhi.store.redis;
 public class StreamVariable {
     private Object name;
 
-    StreamVariable(Object name) {
+    public StreamVariable(Object name) {
         this.name = name;
     }
 
