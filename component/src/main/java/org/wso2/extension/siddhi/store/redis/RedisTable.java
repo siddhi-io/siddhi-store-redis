@@ -220,9 +220,6 @@ public class RedisTable extends AbstractRecordTable {
 
     }
 
-    /**
-     *
-     * **/
     @Override
     protected void update(CompiledCondition updateCondition, List<Map<String, Object>> updateConditionParameterMaps,
                           Map<String, CompiledExpression> updateSetExpressions,
