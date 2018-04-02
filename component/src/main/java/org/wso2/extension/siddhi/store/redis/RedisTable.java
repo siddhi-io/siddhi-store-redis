@@ -88,14 +88,14 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                 @Parameter(name = "password",
                         description = "password to connect to redis server",
                         type = {DataType.STRING}, optional = true,
-                        defaultValue = "will try to connect without authenticate")
+                        defaultValue = "will try to connect without authentication")
         },
         examples = {
                 @Example(
                         syntax = "@store(type='redis',host='localhost',port=6379, password='root',table" +
                                 ".name='fooTable')" +
                                 "define table fooTable(time long, date String)",
-                        description = "above collection will create a redis table with the name FooTable"
+                        description = "above collection will create a redis table with the name fooTable"
                 )
         }
 )
@@ -105,7 +105,7 @@ public class RedisTable extends AbstractRecordTable {
     private List<Attribute> attributes;
     private List<String> primaryKeys = Collections.emptyList();
     private JedisPool jedisPool;
-    private String host = "localhost";
+    private String host = RedisTableConstants.DEFAULT_HOST;
     private char[] password;
     private int port = RedisTableConstants.DEFAULT_PORT;
     private String tableName;
