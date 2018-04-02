@@ -28,6 +28,7 @@ Redis Server instance should be started and ready to connect via redis java API.
 extension you can replace the component <a target="_blank" href="https://github
 .com/wso2-extensions/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` 
 directory.
+* This extension depends on Jedis, redis client. Please download redis client jar (>2.7.0) and place in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 

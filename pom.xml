@@ -299,11 +299,10 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.apache.commons.pool2.*;version="${apache.commons.pool.import.range}",
-                            redis.clients.*;version="${redis.import.range}"
+                            org.apache.commons.pool2.*;version="${apache.commons.pool.import.range}"
                         </Private-Package>
                         <Export-Package>
-                            org.wso2.extension.siddhi.store.redis.*;version="${project.version}
+                            org.wso2.extension.siddhi.store.redis.*;version="${project.version}"
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional
