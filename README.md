@@ -48,8 +48,7 @@ directory.
 
 |  Branch | Build Status |
 | :------ |:------------ | 
-| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-redis/badge/icon)](https://wso2
-.org/jenkins/job/siddhi/job/siddhi-store-redis/) |
+| master  | [![Build Status](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-redis/badge/icon)](https://wso2.org/jenkins/job/siddhi/job/siddhi-store-redis/) |
 
 ---
 
