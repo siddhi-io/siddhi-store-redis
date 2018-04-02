@@ -309,6 +309,4 @@ public class UpdateRedisTableTestCase {
         siddhiAppRuntime.shutdown();
         cleanDB();
     }
-
-
 }

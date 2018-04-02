@@ -148,8 +148,6 @@ public class RedisTable extends AbstractRecordTable {
         } else {
             tableName = tableDefinition.getId();
         }
-
-
     }
 
     @Override

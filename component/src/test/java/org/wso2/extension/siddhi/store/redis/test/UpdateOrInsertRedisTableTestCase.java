@@ -97,8 +97,6 @@ public class UpdateOrInsertRedisTableTestCase {
 
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
-
-
     }
 
     @Test
@@ -144,7 +142,6 @@ public class UpdateOrInsertRedisTableTestCase {
 
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
-
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
@@ -189,8 +186,5 @@ public class UpdateOrInsertRedisTableTestCase {
 
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
-
     }
-
-
 }
