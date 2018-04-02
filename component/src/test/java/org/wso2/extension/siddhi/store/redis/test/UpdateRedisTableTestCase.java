@@ -35,7 +35,10 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 import org.wso2.siddhi.core.util.SiddhiTestHelper;
 
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.awaitility.Awaitility.await;
 
 
 public class UpdateRedisTableTestCase {
@@ -220,7 +223,7 @@ public class UpdateRedisTableTestCase {
         checkStockStream.send(new Object[]{"IBM", 75.6, 100L});
         checkStockStream.send(new Object[]{"WSO2", 57.6, 200L});
         checkStockStream.send(new Object[]{"WSO2", 57.6, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         AssertJUnit.assertEquals("Number of success events", 3, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
@@ -300,7 +303,7 @@ public class UpdateRedisTableTestCase {
 
         checkStockStream.send(new Object[]{"IBM", "75.6", 100L});
         checkStockStream.send(new Object[]{"WSO2", "57.6", 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         AssertJUnit.assertEquals("Number of success events", 2, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);

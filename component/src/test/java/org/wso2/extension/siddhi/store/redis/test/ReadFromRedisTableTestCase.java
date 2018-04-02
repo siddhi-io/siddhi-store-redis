@@ -33,6 +33,10 @@ import org.wso2.siddhi.core.query.output.callback.QueryCallback;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+
 public class ReadFromRedisTableTestCase {
     private static final Logger log = LoggerFactory.getLogger(ReadFromRedisTableTestCase.class);
     private int inEventCount;
@@ -123,7 +127,7 @@ public class ReadFromRedisTableTestCase {
         searchStream.send(new Object[]{"WSO2"});
         searchStream.send(new Object[]{"IBM"});
 
-        Thread.sleep(3000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
@@ -198,8 +202,7 @@ public class ReadFromRedisTableTestCase {
 
         searchStream.send(new Object[]{40.F});
         searchStream.send(new Object[]{30.F});
-
-        Thread.sleep(3000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
@@ -268,8 +271,7 @@ public class ReadFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 30.F, 10L});
 
         searchStream.send(new Object[]{40.F});
-
-        Thread.sleep(3000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         Assert.assertEquals(inEventCount, 1, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");

@@ -38,6 +38,9 @@
             <activation>
                 <activeByDefault>true</activeByDefault>
             </activation>
+            <properties>
+                <maven.test.skip>true</maven.test.skip>
+            </properties>
             <modules>
                 <module>component</module>
                 <module>coverage-reports</module>
@@ -148,14 +151,15 @@
     </profiles>
 
     <properties>
-        <siddhi.version>4.0.4</siddhi.version>
+        <siddhi.version>4.1.17</siddhi.version>
         <wso2.slf4j.version>1.5.10.wso2v1</wso2.slf4j.version>
         <testng.version>6.8</testng.version>
         <commons.logging.version>1.1.1</commons.logging.version>
         <redis.version>2.8.0</redis.version>
         <jacoco.version>0.7.9</jacoco.version>
         <jacoco.ant.version>0.7.9</jacoco.ant.version>
-        <awaitility.version>3.0.0</awaitility.version>
+        <awaitility.version>3.1.0</awaitility.version>
+
         <redis.import.range>[2.8.0 3.0.0]</redis.import.range>
         <apache.commons.pool.import.range>[2.3 2.5]</apache.commons.pool.import.range>
 
@@ -220,6 +224,12 @@
                 <groupId>org.testng</groupId>
                 <artifactId>testng</artifactId>
                 <version>${testng.version}</version>
+                <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.awaitility</groupId>
+                <artifactId>awaitility</artifactId>
+                <version>${awaitility.version}</version>
                 <scope>test</scope>
             </dependency>
             <dependency>
@@ -293,7 +303,7 @@
                             redis.clients.*;version="${redis.import.range}"
                         </Private-Package>
                         <Export-Package>
-                            org.wso2.extension.siddhi.store.redis.*
+                            org.wso2.extension.siddhi.store.redis.*;version="${project.version}
                         </Export-Package>
                         <Import-Package>
                             *;resolution:=optional

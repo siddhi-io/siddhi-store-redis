@@ -32,7 +32,10 @@ import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 
 import java.sql.SQLException;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.awaitility.Awaitility.await;
 
 public class UpdateOrInsertRedisTableTestCase {
     private static final Logger log = LoggerFactory.getLogger(UpdateOrInsertRedisTableTestCase.class);
@@ -89,8 +92,7 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"FB", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
-
-        Thread.sleep(5000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
@@ -134,8 +136,7 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"WSO2", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"WSO2", 20.3F, 50L});
-        Thread.sleep(3000);
-
+        await().atMost(3, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");

@@ -30,6 +30,10 @@ import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
 import org.wso2.siddhi.core.exception.SiddhiAppCreationException;
 import org.wso2.siddhi.core.stream.input.InputHandler;
 
+import java.util.concurrent.TimeUnit;
+
+import static org.awaitility.Awaitility.await;
+
 public class DeleteFromRedisTableTestCase {
 
     private static final Logger log = LoggerFactory.getLogger(DeleteFromRedisTableTestCase.class);
@@ -78,7 +82,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"IBM", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
@@ -120,7 +124,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"IBM", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 1, "Deletion failed");
@@ -161,7 +165,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"IBM", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
@@ -202,7 +206,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"IBM", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
@@ -243,7 +247,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
@@ -283,7 +287,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 0, "Deletion failed");
@@ -326,7 +330,7 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 75.6F, 100L});
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
-        Thread.sleep(1000);
+        await().atMost(5, TimeUnit.SECONDS);
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
