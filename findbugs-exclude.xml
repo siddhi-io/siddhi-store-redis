@@ -20,10 +20,6 @@
 <FindBugsFilter>
     <Match>
         <Class name="org.wso2.extension.siddhi.store.redis.RedisIterator"/>
-        <Bug pattern="UWF_FIELD_NOT_INITIALIZED_IN_CONSTRUCTOR"/>
-    </Match>
-    <Match>
-        <Class name="org.wso2.extension.siddhi.store.redis.RedisIterator"/>
         <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
     </Match>
 </FindBugsFilter>
