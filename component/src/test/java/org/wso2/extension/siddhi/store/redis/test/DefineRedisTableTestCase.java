@@ -18,7 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis.test;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
@@ -28,7 +29,7 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 
 
 public class DefineRedisTableTestCase {
-    private static final Logger LOG = Logger.getLogger(DefineRedisTableTestCase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
 
 

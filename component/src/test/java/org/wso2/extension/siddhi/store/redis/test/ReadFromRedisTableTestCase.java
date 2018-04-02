@@ -18,7 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis.test;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -33,7 +34,7 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 import org.wso2.siddhi.core.util.EventPrinter;
 
 public class ReadFromRedisTableTestCase {
-    private static final Logger log = Logger.getLogger(ReadFromRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(ReadFromRedisTableTestCase.class);
     private int inEventCount;
     private int removeEventCount;
     private boolean eventArrived;

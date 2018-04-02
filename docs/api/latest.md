@@ -50,7 +50,7 @@
     <tr>
         <td style="vertical-align: top">password</td>
         <td style="vertical-align: top; word-wrap: break-word">password to connect to redis server</td>
-        <td style="vertical-align: top">will try to connect without authenticate</td>
+        <td style="vertical-align: top">will try to connect without authentication</td>
         <td style="vertical-align: top">STRING</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
@@ -62,5 +62,5 @@
 ```
 @store(type='redis',host='localhost',port=6379, password='root',table.name='fooTable')define table fooTable(time long, date String)
 ```
-<p style="word-wrap: break-word">above collection will create a redis table with the name FooTable</p>
+<p style="word-wrap: break-word">above collection will create a redis table with the name fooTable</p>
 

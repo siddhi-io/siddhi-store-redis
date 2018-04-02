@@ -18,8 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
@@ -101,7 +101,7 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
 )
 
 public class RedisTable extends AbstractRecordTable {
-    private static final Log LOG = LogFactory.getLog(RedisTable.class);
+    private static final Logger LOG = LoggerFactory.getLogger(RedisTable.class);
     private List<Attribute> attributes;
     private List<String> primaryKeys = Collections.emptyList();
     private JedisPool jedisPool;

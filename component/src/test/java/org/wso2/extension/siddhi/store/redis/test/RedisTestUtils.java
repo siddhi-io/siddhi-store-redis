@@ -41,10 +41,7 @@ public class RedisTestUtils {
             jedis.auth(PASSWORD);
         } catch (Exception e) {
             throw new ConnectionUnavailableException("Error while initializing the Redis connection to host : "
-                    + HOST + " : "
-                    + e
-                    .getMessage
-                            (), e);
+                    + HOST + " : " + e.getMessage(), e);
         }
     }
 

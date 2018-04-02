@@ -149,13 +149,15 @@
 
     <properties>
         <siddhi.version>4.0.4</siddhi.version>
-        <log4j.version>1.2.17.wso2v1</log4j.version>
+        <wso2.slf4j.version>1.5.10.wso2v1</wso2.slf4j.version>
         <testng.version>6.8</testng.version>
         <commons.logging.version>1.1.1</commons.logging.version>
         <redis.version>2.8.0</redis.version>
-        <jacoco.vefindrsion>0.7.9</jacoco.vefindrsion>
+        <jacoco.version>0.7.9</jacoco.version>
         <jacoco.ant.version>0.7.9</jacoco.ant.version>
         <awaitility.version>3.0.0</awaitility.version>
+        <redis.import.range>[2.8.0 3.0.0]</redis.import.range>
+        <apache.commons.pool.import.range>[2.3 2.5]</apache.commons.pool.import.range>
 
         <mavan.findbugsplugin.exclude.file>../findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
     </properties>
@@ -198,27 +200,9 @@
                 <scope>test</scope>
             </dependency>
             <dependency>
-                <groupId>org.apache.log4j.wso2</groupId>
-                <artifactId>log4j</artifactId>
-                <version>${log4j.version}</version>
-                <exclusions>
-                    <exclusion>
-                        <groupId>javax.mail</groupId>
-                        <artifactId>mail</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>javax.jms</groupId>
-                        <artifactId>jms</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.sun.jdmk</groupId>
-                        <artifactId>jmxtools</artifactId>
-                    </exclusion>
-                    <exclusion>
-                        <groupId>com.sun.jmx</groupId>
-                        <artifactId>jmxri</artifactId>
-                    </exclusion>
-                </exclusions>
+                <groupId>slf4j.wso2</groupId>
+                <artifactId>slf4j</artifactId>
+                <version>${wso2.slf4j.version}</version>
             </dependency>
             <dependency>
                 <groupId>redis.clients</groupId>
@@ -305,12 +289,8 @@
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
                         <Private-Package>
-                            org.apache.commons.pool2.*,
-                            org.apache.http.*,
-                            org.apache.jute.*,
-                            org.noggit.*,
-                            redis.clients.*,
-                            net.sf.cglib.proxy
+                            org.apache.commons.pool2.*;version="${apache.commons.pool.import.range}",
+                            redis.clients.*;version="${redis.import.range}"
                         </Private-Package>
                         <Export-Package>
                             org.wso2.extension.siddhi.store.redis.*

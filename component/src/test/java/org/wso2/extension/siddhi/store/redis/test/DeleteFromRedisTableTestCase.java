@@ -18,8 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis.test;
 
-import org.apache.commons.logging.Log;
-import org.apache.commons.logging.LogFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -32,7 +32,7 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 
 public class DeleteFromRedisTableTestCase {
 
-    private static final Log log = LogFactory.getLog(DeleteFromRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteFromRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
 
     @BeforeClass

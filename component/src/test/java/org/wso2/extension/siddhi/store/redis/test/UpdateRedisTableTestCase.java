@@ -18,7 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis.test;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.AssertJUnit;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -38,7 +39,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 
 public class UpdateRedisTableTestCase {
-    private static final Logger log = Logger.getLogger(UpdateRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateRedisTableTestCase.class);
     private AtomicInteger inEventCount = new AtomicInteger();
     private boolean eventArrived;
     private int removeEventCount;
@@ -99,7 +100,6 @@ public class UpdateRedisTableTestCase {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
-                log.info(inEvents);
                 if (inEvents != null) {
                     for (Event event : inEvents) {
                         inEventCount.incrementAndGet();
@@ -264,7 +264,6 @@ public class UpdateRedisTableTestCase {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
                 EventPrinter.print(timeStamp, inEvents, removeEvents);
-                log.info(inEvents);
                 if (inEvents != null) {
                     for (Event event : inEvents) {
                         inEventCount.incrementAndGet();

@@ -18,7 +18,8 @@
 
 package org.wso2.extension.siddhi.store.redis.test;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
@@ -34,7 +35,7 @@ import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 public class UpdateOrInsertRedisTableTestCase {
-    private static final Logger log = Logger.getLogger(UpdateOrInsertRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateOrInsertRedisTableTestCase.class);
     private static final String TABLE_NAME = "StockTable";
     private AtomicInteger count = new AtomicInteger(0);
 
