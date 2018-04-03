@@ -25,6 +25,8 @@ Find some useful links below:
 
 * This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this extension you can replace the component <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` directory.
 
+* This extension depends on Jedis, redis client. Please download redis client jar (>2.7.0) and place in `<STREAM_PROCESSOR_HOME>/lib` directory.
+
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
 * This extension can be added as a maven dependency along with other Siddhi dependencies to your project.
