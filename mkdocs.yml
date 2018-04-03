@@ -14,6 +14,7 @@ google_analytics:
 - auto
 pages:
 - Welcome to Siddhi Store Redis: index.md
-- API Docs: []
+- API Docs:
+  - latest: api/latest.md
 - License: license.md
 theme: material
