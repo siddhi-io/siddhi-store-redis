@@ -13,9 +13,8 @@ google_analytics:
 - UA-103065-28
 - auto
 pages:
-- Welcome to WSO2 Siddhi Store Redis: index.md
-- API Docs: null
-- License: license.md
+- Welcome to Siddhi Store Redis: index.md
 - API Docs:
   - latest: api/latest.md
+- License: license.md
 theme: material

@@ -13,6 +13,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.0-SNAPSHOT">1.0.0-SNAPSHOT</a>.
 
 ## Prerequisites
  
@@ -54,11 +55,7 @@ directory.
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.15/#redis-store">redis</a> *(<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>)*<br><div style="padding-left: 1em;"><p>Redis store implementation uses redis hashes for underlying data storage. The events 
-are 
-converted to redis hash sets when the events are inserted to redis store. redis hash sets are converted to Events when 
-the 
-redis hashes are read from redis database. </p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.0-SNAPSHOT/#redis-store">redis</a> *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>*<br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource</p></div>
 
 ## How to Contribute
  
