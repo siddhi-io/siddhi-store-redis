@@ -27,7 +27,7 @@
 
     <groupId>org.wso2.extension.siddhi.store.redis</groupId>
     <artifactId>siddhi-store-redis-parent</artifactId>
-    <version>1.0.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <packaging>pom</packaging>
     <name>WSO2 Siddhi Store Extension - redis Aggregator Pom</name>
     <url>http://wso2.org</url>
