@@ -39,7 +39,7 @@ directory.
      <dependency>
         <groupId>org.wso2.extension.siddhi.store.redis</groupId>
         <artifactId>siddhi-store-redis</artifactId>
-        <version><version>x.x.x</version></version>
+        <version>x.x.x</version>
      </dependency>
 ```
 
