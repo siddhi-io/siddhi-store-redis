@@ -18,6 +18,7 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
+import org.apache.commons.pool2.impl.GenericObjectPoolConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
@@ -44,7 +45,6 @@ import org.wso2.siddhi.query.api.definition.TableDefinition;
 import org.wso2.siddhi.query.api.util.AnnotationHelper;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.exceptions.JedisConnectionException;
@@ -259,7 +259,7 @@ public class RedisTable extends AbstractRecordTable {
     protected void connect() throws ConnectionUnavailableException {
         try {
             if (jedisPool == null) {
-                jedisPool = new JedisPool(new JedisPoolConfig(), host, port);
+                jedisPool = new JedisPool(new GenericObjectPoolConfig(), host, port);
                 jedis = jedisPool.getResource();
                 //if authentication is provided use it to connect to redis server
                 if (Objects.nonNull(password)) {
