@@ -16,7 +16,8 @@
   ~ specific language governing permissions and limitations
   ~ under the License.
   -->
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
         <groupId>org.wso2</groupId>
@@ -140,7 +141,7 @@
         <awaitility.version>3.1.0</awaitility.version>
 
         <redis.import.range>[2.8.0 3.0.0]</redis.import.range>
-        <apache.commons.pool.import.range>[2.3 2.5]</apache.commons.pool.import.range>
+        <apache.commons.pool.version>2.3</apache.commons.pool.version>
 
         <mavan.findbugsplugin.exclude.file>../findbugs-exclude.xml</mavan.findbugsplugin.exclude.file>
     </properties>
@@ -181,6 +182,12 @@
                 <artifactId>awaitility</artifactId>
                 <version>${awaitility.version}</version>
                 <scope>test</scope>
+            </dependency>
+            <dependency>
+                <groupId>org.apache.commons</groupId>
+                <artifactId>commons.pool2</artifactId>
+                <version>${apache.commons.pool.version}</version>
+                <scope>provided</scope>
             </dependency>
             <dependency>
                 <groupId>slf4j.wso2</groupId>
@@ -265,12 +272,13 @@
                     <instructions>
                         <Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
                         <Bundle-Name>${project.artifactId}</Bundle-Name>
-                        <Private-Package>
-                            org.apache.commons.pool2.*;version="${apache.commons.pool.import.range}"
-                        </Private-Package>
                         <Export-Package>
+                            org.apache.commons.pool2.*;version="${apache.commons.pool.version}",
                             org.wso2.extension.siddhi.store.redis.*;version="${project.version}"
                         </Export-Package>
+                        <Private-Package>
+                            org.apache.commons.pool2.*;version="${apache.commons.pool.version}"
+                        </Private-Package>
                         <Import-Package>
                             *;resolution:=optional
                         </Import-Package>
