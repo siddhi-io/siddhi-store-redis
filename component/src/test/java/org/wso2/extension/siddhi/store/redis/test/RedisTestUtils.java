@@ -26,8 +26,6 @@ import redis.clients.jedis.JedisPoolConfig;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
-import java.util.Objects;
-
 public class RedisTestUtils {
     private static final String HOST = "localhost";
     private static JedisPool jedisPool;
@@ -57,7 +55,7 @@ public class RedisTestUtils {
     }
 
     public static void cleanRedisDatabase() throws ConnectionUnavailableException {
-        if (Objects.isNull(jedis)) {
+        if (jedis == null) {
             createConnectionPool();
         }
         jedis.flushAll();

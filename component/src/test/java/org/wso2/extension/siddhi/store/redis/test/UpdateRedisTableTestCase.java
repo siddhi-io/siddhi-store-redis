@@ -42,7 +42,7 @@ import static org.awaitility.Awaitility.await;
 
 
 public class UpdateRedisTableTestCase {
-    private static final Logger log = LoggerFactory.getLogger(UpdateRedisTableTestCase.class);
+    private static final Logger LOG = LoggerFactory.getLogger(UpdateRedisTableTestCase.class);
     private AtomicInteger inEventCount = new AtomicInteger();
     private boolean eventArrived;
     private int removeEventCount;
@@ -57,12 +57,12 @@ public class UpdateRedisTableTestCase {
 
     @BeforeClass
     public static void startTest() {
-        log.info("== Redis Table UPDATE tests started ==");
+        LOG.info("== Redis Table UPDATE tests started ==");
     }
 
     @AfterClass
     public static void shutdown() {
-        log.info("== Redis Table UPDATE tests completed ==");
+        LOG.info("== Redis Table UPDATE tests completed ==");
     }
 
     public static void cleanDB() throws ConnectionUnavailableException {
@@ -72,6 +72,7 @@ public class UpdateRedisTableTestCase {
     @Test
     public void updateFromTableTest1() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when a primary key condition is true.
+        LOG.info("updateFromTableTest 1 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
@@ -81,7 +82,6 @@ public class UpdateRedisTableTestCase {
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price string, volume long); ";
-
         String query = "" +
                 "@info(name = 'query1')\n" +
                 "from StockStream\n" +
@@ -91,14 +91,11 @@ public class UpdateRedisTableTestCase {
                 "from UpdateStockStream\n" +
                 "select symbol, price, volume\n" +
                 "update StockTable\n" +
-                "on (StockTable.symbol == symbol);" +
-                "" +
+                "on (StockTable.symbol == symbol); \n" +
                 "@info(name = 'query3') " +
                 "from CheckStockStream[ (price==StockTable.price) in StockTable] " +
                 "insert into OutStream;";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("query3", new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
@@ -150,7 +147,7 @@ public class UpdateRedisTableTestCase {
     @Test
     public void updateFromTableTest2() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when index key are not present;
-        log.info("updateFromTableTest2");
+        LOG.info("updateFromTableTest 2 - update event data in Redis table when index key are not present. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
@@ -208,7 +205,6 @@ public class UpdateRedisTableTestCase {
             }
 
         });
-
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
         InputHandler checkStockStream = siddhiAppRuntime.getInputHandler("CheckStockStream");
@@ -234,7 +230,7 @@ public class UpdateRedisTableTestCase {
 
     @Test(dependsOnMethods = "updateFromTableTest2", expectedExceptions = SiddhiAppCreationException.class)
     public void updateFromTableTest3() throws InterruptedException, ConnectionUnavailableException {
-        //Check for update event data in Redis table when a primary key condition is true.
+        LOG.info("updateFromTableTest 3 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
@@ -260,9 +256,7 @@ public class UpdateRedisTableTestCase {
                 "@info(name = 'query3') " +
                 "from CheckStockStream[ (price==StockTable.price) in StockTable] " +
                 "insert into OutStream;";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         siddhiAppRuntime.addCallback("query3", new QueryCallback() {
             @Override
             public void receive(long timeStamp, Event[] inEvents, Event[] removeEvents) {
@@ -290,7 +284,6 @@ public class UpdateRedisTableTestCase {
             }
 
         });
-
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
         InputHandler checkStockStream = siddhiAppRuntime.getInputHandler("CheckStockStream");
@@ -303,8 +296,8 @@ public class UpdateRedisTableTestCase {
 
         checkStockStream.send(new Object[]{"IBM", "75.6", 100L});
         checkStockStream.send(new Object[]{"WSO2", "57.6", 100L});
-        await().atMost(5, TimeUnit.SECONDS);
 
+        await().atMost(5, TimeUnit.SECONDS);
         AssertJUnit.assertEquals("Number of success events", 2, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);

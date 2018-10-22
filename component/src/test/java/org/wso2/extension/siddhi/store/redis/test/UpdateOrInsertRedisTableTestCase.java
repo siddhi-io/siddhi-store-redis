@@ -60,7 +60,7 @@ public class UpdateOrInsertRedisTableTestCase {
     @Test
     public void updateOrInsertRedisTableTest1() throws InterruptedException, SQLException,
             ConnectionUnavailableException {
-        log.info("updateOrInsertRedisTableTest1");
+        log.info("updateOrInsertRedisTableTest 1 - Update table on ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -79,9 +79,7 @@ public class UpdateOrInsertRedisTableTestCase {
                 "from UpdateStockStream#window.timeBatch(1 sec) " +
                 "update or insert into StockTable " +
                 "on StockTable.symbol=='GOOG';";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
         InputHandler checkStockStream = siddhiAppRuntime.getInputHandler("CheckStockStream");
@@ -92,12 +90,10 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"FB", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
-        await().atMost(5, TimeUnit.SECONDS);
 
+        await().atMost(5, TimeUnit.SECONDS);
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
-        siddhiAppRuntime.shutdown();
-
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
     }
@@ -105,7 +101,7 @@ public class UpdateOrInsertRedisTableTestCase {
     @Test
     public void updateOrInsertRedisTableTest2() throws InterruptedException, SQLException,
             ConnectionUnavailableException {
-        log.info("updateOrInsertRedisTableTest2");
+        log.info("updateOrInsertRedisTableTest 2");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -124,9 +120,7 @@ public class UpdateOrInsertRedisTableTestCase {
                 "from UpdateStockStream#window.timeBatch(1 sec) " +
                 "update or insert into StockTable " +
                 "   on StockTable.symbol == symbol; ";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
         siddhiAppRuntime.start();
@@ -136,20 +130,19 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"WSO2", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"WSO2", 20.3F, 50L});
-        await().atMost(3, TimeUnit.SECONDS);
 
+        await().atMost(3, TimeUnit.SECONDS);
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
 
-        siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(expectedExceptions = SiddhiAppCreationException.class)
     public void updateOrInsertRedisTableTest3() throws InterruptedException, SQLException,
             ConnectionUnavailableException {
-        log.info("updateOrInsertRedisTableTest3");
+        log.info("updateOrInsertRedisTableTest 3");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -169,9 +162,7 @@ public class UpdateOrInsertRedisTableTestCase {
                 "update or insert into StockTable " +
                 "set StockTable.volume = volume +10 " +
                 "   on StockTable.price == price; ";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
-
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
         siddhiAppRuntime.start();
@@ -184,8 +175,6 @@ public class UpdateOrInsertRedisTableTestCase {
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
-        siddhiAppRuntime.shutdown();
-
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
     }
