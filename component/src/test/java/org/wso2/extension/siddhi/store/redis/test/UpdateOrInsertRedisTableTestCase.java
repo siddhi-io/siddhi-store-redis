@@ -135,7 +135,6 @@ public class UpdateOrInsertRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
-
         RedisTestUtils.cleanRedisDatabase();
     }
 

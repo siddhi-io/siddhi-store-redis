@@ -42,7 +42,7 @@ import static org.awaitility.Awaitility.await;
 
 
 public class UpdateRedisTableTestCase {
-    private static final Logger LOG = LoggerFactory.getLogger(UpdateRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(UpdateRedisTableTestCase.class);
     private AtomicInteger inEventCount = new AtomicInteger();
     private boolean eventArrived;
     private int removeEventCount;
@@ -57,12 +57,12 @@ public class UpdateRedisTableTestCase {
 
     @BeforeClass
     public static void startTest() {
-        LOG.info("== Redis Table UPDATE tests started ==");
+        log.info("== Redis Table UPDATE tests started ==");
     }
 
     @AfterClass
     public static void shutdown() {
-        LOG.info("== Redis Table UPDATE tests completed ==");
+        log.info("== Redis Table UPDATE tests completed ==");
     }
 
     public static void cleanDB() throws ConnectionUnavailableException {
@@ -72,7 +72,7 @@ public class UpdateRedisTableTestCase {
     @Test
     public void updateFromTableTest1() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when a primary key condition is true.
-        LOG.info("updateFromTableTest 1 - update event data in Redis table when a primary key condition is true. ");
+        log.info("updateFromTableTest 1 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
@@ -147,7 +147,7 @@ public class UpdateRedisTableTestCase {
     @Test
     public void updateFromTableTest2() throws InterruptedException, ConnectionUnavailableException {
         //Check for update event data in Redis table when index key are not present;
-        LOG.info("updateFromTableTest 2 - update event data in Redis table when index key are not present. ");
+        log.info("updateFromTableTest 2 - update event data in Redis table when index key are not present. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +
@@ -230,7 +230,7 @@ public class UpdateRedisTableTestCase {
 
     @Test(dependsOnMethods = "updateFromTableTest2", expectedExceptions = SiddhiAppCreationException.class)
     public void updateFromTableTest3() throws InterruptedException, ConnectionUnavailableException {
-        LOG.info("updateFromTableTest 3 - update event data in Redis table when a primary key condition is true. ");
+        log.info("updateFromTableTest 3 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price string, volume long); " +

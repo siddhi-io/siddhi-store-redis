@@ -29,12 +29,12 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 
 
 public class DefineRedisTableTestCase {
-    private static final Logger LOG = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
 
     @Test
     public void defineRedisTableTest1() throws InterruptedException, ConnectionUnavailableException {
-        LOG.info("defineRedisTableTestCase 1 - Table with a primary key");
+        log.info("defineRedisTableTestCase 1 - Table with a primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -61,7 +61,7 @@ public class DefineRedisTableTestCase {
 
     @Test
     public void defineRedisTableTest2() throws InterruptedException, ConnectionUnavailableException {
-        LOG.info("defineRedisTableTestCase 2 - Table with a primary key and an index column");
+        log.info("defineRedisTableTestCase 2 - Table with a primary key and an index column");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -74,7 +74,7 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
+        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -90,7 +90,7 @@ public class DefineRedisTableTestCase {
 
     @Test
     public void defineRedisTableTest3() throws InterruptedException, ConnectionUnavailableException {
-        LOG.info("defineRedisTableTestCase 3 - Table without a primary key");
+        log.info("defineRedisTableTestCase 3 - Table without a primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -101,7 +101,7 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
+        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -117,7 +117,7 @@ public class DefineRedisTableTestCase {
 
     @Test
     public void defineRedisTableTest4() throws InterruptedException, ConnectionUnavailableException {
-        LOG.info("defineRedisTableTestCase 4 - Table with an index column");
+        log.info("defineRedisTableTestCase 4 - Table with an index column");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -129,7 +129,7 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
+        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();

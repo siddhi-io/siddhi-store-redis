@@ -35,23 +35,23 @@ import java.util.concurrent.TimeUnit;
 import static org.awaitility.Awaitility.await;
 
 public class DeleteFromRedisTableTestCase {
-    private static final Logger LOG = LoggerFactory.getLogger(DeleteFromRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(DeleteFromRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
 
     @BeforeClass
     public static void startTest() {
-        LOG.info("== Redis Table DELETE tests started ==");
+        log.info("== Redis Table DELETE tests started ==");
     }
 
     @AfterClass
     public static void shutdown() {
-        LOG.info("== Redis Table DELETE tests completed ==");
+        log.info("== Redis Table DELETE tests completed ==");
     }
 
     @Test(description = "deleteFromRedisTableTest1")
     public void deleteFromRedisTableTest1() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with primary keys.
-        LOG.info("deleteFromRedisTableTest1 - simple deletion with a primary key");
+        log.info("deleteFromRedisTableTest1 - simple deletion with a primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -92,7 +92,7 @@ public class DeleteFromRedisTableTestCase {
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
     public void deleteFromRedisTableTest2() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with primary keys, operands in different order.
-        LOG.info("deleteFromRedisTableTest2 - simple deletion with primary keys, operands in different order.");
+        log.info("deleteFromRedisTableTest2 - simple deletion with primary keys, operands in different order.");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -132,7 +132,7 @@ public class DeleteFromRedisTableTestCase {
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
     public void deleteFromRedisTableTest3() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with primary keys with one operand as a constant.
-        LOG.info("deleteFromRedisTableTest3 - simple deletion with primary keys with one operand as a constant.");
+        log.info("deleteFromRedisTableTest3 - simple deletion with primary keys with one operand as a constant.");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -171,7 +171,7 @@ public class DeleteFromRedisTableTestCase {
     @Test(dependsOnMethods = "deleteFromRedisTableTest3")
     public void deleteFromRedisTableTest4() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with primary keys with one operand as a constant, with the operand orders reversed.
-        LOG.info("deleteFromRedisTableTest4 - simple deletion with primary keys with one operand as a constant, " +
+        log.info("deleteFromRedisTableTest4 - simple deletion with primary keys with one operand as a constant, " +
                 "with the operand orders reversed.");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
@@ -211,7 +211,7 @@ public class DeleteFromRedisTableTestCase {
     @Test(dependsOnMethods = "deleteFromRedisTableTest4", expectedExceptions = SiddhiAppCreationException.class)
     public void deleteFromRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with conditions. Expected to throw an exception since it is not supported.
-        LOG.info("deleteFromRedisTableTest5 - simple deletion with conditions. Expected to throw an exception since " +
+        log.info("deleteFromRedisTableTest5 - simple deletion with conditions. Expected to throw an exception since " +
                 "it is not supported.");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
@@ -241,7 +241,6 @@ public class DeleteFromRedisTableTestCase {
         stockStream.send(new Object[]{"HTC", 57.6F, 100L});
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
         await().atMost(5, TimeUnit.SECONDS);
-
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
     }
@@ -250,7 +249,7 @@ public class DeleteFromRedisTableTestCase {
     public void deleteFromRedisTableTest6() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with true condition. This will delete all the records in the table with indexed
         // values
-        LOG.info("deleteFromRedisTableTest6 - simple deletion with true condition. This will delete all the records" +
+        log.info("deleteFromRedisTableTest6 - simple deletion with true condition. This will delete all the records" +
                 " in the table with indexed");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
@@ -291,7 +290,7 @@ public class DeleteFromRedisTableTestCase {
     public void deleteFromRedisTableTest7() throws InterruptedException, ConnectionUnavailableException {
         // Testing simple deletion with true condition. This will delete all the records in the table with indexed
         // values
-        LOG.info("deleteFromRedisTableTest7 - simple deletion with true condition. This will delete all the records " +
+        log.info("deleteFromRedisTableTest7 - simple deletion with true condition. This will delete all the records " +
                 "in the table with indexed values");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +

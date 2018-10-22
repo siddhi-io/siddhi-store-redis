@@ -100,7 +100,7 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
 )
 
 public class RedisTable extends AbstractRecordTable {
-    private static final Logger LOG = LoggerFactory.getLogger(RedisTable.class);
+    private static final Logger log = LoggerFactory.getLogger(RedisTable.class);
     private List<Attribute> attributes;
     private List<String> primaryKeys = Collections.emptyList();
     private JedisPool jedisPool;
@@ -166,7 +166,9 @@ public class RedisTable extends AbstractRecordTable {
                         //create a set for each indexed column
                         createIndexTable(attributeMap, keyGenBuilder);
                     } else {
-                        LOG.debug("There are no indexed columns defined in table " + tableName);
+                        if (log.isDebugEnabled()) {
+                            log.debug("There are no indexed columns defined in table " + tableName);
+                        }
                     }
                 }
             });
@@ -272,7 +274,7 @@ public class RedisTable extends AbstractRecordTable {
                 jedisPool.close();
             }
         } catch (JedisConnectionException e) {
-            LOG.error("Error while closing the redis client for table: " + tableName + " : ", e);
+            log.error("Error while closing the redis client for table: " + tableName + " : ", e);
         }
     }
 
@@ -283,7 +285,7 @@ public class RedisTable extends AbstractRecordTable {
                 jedisPool.destroy();
             }
         } catch (JedisConnectionException e) {
-            LOG.error("Error while closing the redis client for table: " + tableName + " : ", e);
+            log.error("Error while closing the redis client for table: " + tableName + " : ", e);
         }
     }
 
@@ -301,7 +303,9 @@ public class RedisTable extends AbstractRecordTable {
             //create a set for each indexed column
             createIndexTable(attributeMap, keyGenBuilder);
         } else {
-            LOG.debug("There are no indexed columns defined in table " + tableName);
+            if (log.isDebugEnabled()) {
+                log.debug("There are no indexed columns defined in table " + tableName);
+            }
         }
     }
 
@@ -375,7 +379,7 @@ public class RedisTable extends AbstractRecordTable {
                 if (!exisetRecord.isEmpty()) {
                     updateOnPrimaryKey(updateSetParameterMaps, condition);
                 } else {
-                    LOG.warn("Record " + storeVariable.getName() + " = " + streamVariable.getName() +
+                    log.warn("Record " + storeVariable.getName() + " = " + streamVariable.getName() +
                             " that trying to " + "update does not exist in table : " + tableName + ". ");
                 }
             } else if (!updateOnly && primaryKeys.contains(storeVariable.getName())) {
@@ -383,8 +387,10 @@ public class RedisTable extends AbstractRecordTable {
             } else if (updateOnly && indices.contains(storeVariable.getName())) {
                 updateOrAddOnIndex(updateSetParameterMaps, condition);
             } else if (!updateOnly && indices.contains(storeVariable.getName())) {
-                LOG.debug("Existing records will be updated where " + storeVariable.getName() + " = " +
-                        streamVariable.getName() + ". ");
+                if (log.isDebugEnabled()) {
+                    log.debug("Existing records will be updated where " + storeVariable.getName() + " = " +
+                            streamVariable.getName() + ". ");
+                }
                 updateOrAddOnIndex(updateSetParameterMaps, condition);
             }
         }
