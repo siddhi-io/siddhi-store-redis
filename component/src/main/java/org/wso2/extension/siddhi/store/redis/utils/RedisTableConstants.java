@@ -29,7 +29,6 @@ public class RedisTableConstants {
     public static final String ANNOTATION_ELEMENT_PORT = "port";
     public static final String ANNOTATION_ELEMENT_PASSWORD = "password";
     public static final String ANNOTATION_ELEMENT_TABLE_NAME = "table.name";
-
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 6379;
     public static final int REDIS_BATCH_SIZE = 1000;

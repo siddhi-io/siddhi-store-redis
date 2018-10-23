@@ -33,7 +33,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 
 /**
@@ -68,7 +67,6 @@ public class RedisIterator implements RecordIterator<Object[]> {
         this.query = query;
         this.primaryKeys = primaryKeys;
         this.indexes = indexes;
-
     }
 
     @Override
@@ -77,7 +75,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
     }
 
     private void closeImpl() {
-        if (Objects.nonNull(resultMap)) {
+        if (resultMap != null) {
             resultMap.clear();
         }
         result = null;
@@ -135,14 +133,9 @@ public class RedisIterator implements RecordIterator<Object[]> {
 
     private List<Object[]> fetchResults() {
         List<Object[]> resultList = new ArrayList<>();
-
-        if (Objects.nonNull(query) &&
-                !("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
+        if (query != null && !("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
             return fetchResultsWithCondition();
-
-        } else if (Objects.nonNull(query) &&
-                ("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
-
+        } else if (query != null && ("true".equalsIgnoreCase((query.getStreamVariable()).getName()))) {
             return fetchAllResults();
         }
         return resultList;
@@ -150,11 +143,8 @@ public class RedisIterator implements RecordIterator<Object[]> {
 
     private List<Object[]> fetchResultsWithCondition() {
         List<Object[]> resultList = new ArrayList<>();
-
-        storeVariable = query
-                .getStoreVariable();
-        streamVariable = query
-                .getStreamVariable();
+        storeVariable = query.getStoreVariable();
+        streamVariable = query.getStreamVariable();
         if (indexes.contains(storeVariable.getName())) {
             return fetchResultsByIndexedValue();
         } else if (primaryKeys.contains(storeVariable.getName())) {
@@ -167,13 +157,11 @@ public class RedisIterator implements RecordIterator<Object[]> {
         List<Object[]> resultList = new ArrayList<>();
         if (isInitialTraverse) {
             resultMap = jedis.hgetAll(tableName + ":" + streamVariable.getName());
-            if (Objects.nonNull(resultMap) && !resultMap.isEmpty()) {
+            if (resultMap != null && !resultMap.isEmpty()) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
                 isInitialTraverse = false;
             }
-        } else {
-            return resultList;
         }
         return resultList;
     }
@@ -199,7 +187,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
         }
         scanResultsList.forEach(scanResult -> {
             resultMap = jedis.hgetAll(scanResult.toString());
-            if (Objects.nonNull(resultMap)) {
+            if (resultMap != null) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
             }
@@ -208,7 +196,6 @@ public class RedisIterator implements RecordIterator<Object[]> {
     }
 
     private List fetchBatchOfResultsFromIndexTable(ScanParams scanParams) {
-
         scanResults = jedis.sscan(tableName + ":" + storeVariable.getName() + ":"
                 + streamVariable.getName(), String.valueOf(stringCursor), scanParams);
         stringCursor = Long.valueOf(scanResults.getStringCursor());
@@ -231,12 +218,11 @@ public class RedisIterator implements RecordIterator<Object[]> {
         } else if (scanResultsList.isEmpty() && stringCursor == 0) {
             return resultList;
         }
-
         scanResultsList.forEach(e -> {
             String type = jedis.type(e.toString());
             if (type.equalsIgnoreCase("hash")) {
                 resultMap = jedis.hgetAll(e.toString());
-                if (Objects.nonNull(resultMap)) {
+                if (resultMap != null) {
                     result = resultsGenerator(resultMap);
                     resultList.add(result);
                 }
@@ -254,15 +240,13 @@ public class RedisIterator implements RecordIterator<Object[]> {
         return scanResults.getResult();
     }
 
-
     private Object[] resultsGenerator(Map<String, String> resultMap) {
         Object[] generatedResult = new Object[attributes.size()];
         int i = 0;
         for (Attribute attribute : this.attributes) {
             switch (attribute.getType()) {
                 case BOOL:
-                    generatedResult[i++] = Boolean.parseBoolean(resultMap.get(attribute.getName
-                            ()));
+                    generatedResult[i++] = Boolean.parseBoolean(resultMap.get(attribute.getName()));
                     break;
                 case INT:
                     generatedResult[i++] = Integer.parseInt(resultMap.get(attribute.getName()));

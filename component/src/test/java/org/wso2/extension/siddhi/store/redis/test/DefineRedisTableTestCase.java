@@ -29,12 +29,12 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 
 
 public class DefineRedisTableTestCase {
-    private static final Logger LOG = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
+    private static final Logger log = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
-
 
     @Test
     public void defineRedisTableTest1() throws InterruptedException, ConnectionUnavailableException {
+        log.info("defineRedisTableTestCase 1 - Table with a primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -42,12 +42,10 @@ public class DefineRedisTableTestCase {
                 "port='6379', table.name='fooTable', password= 'root')" +
                 "@PrimaryKey('name')" +
                 "define table fooTable(name string, amount double); ";
-
         String query = "" +
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -63,6 +61,7 @@ public class DefineRedisTableTestCase {
 
     @Test
     public void defineRedisTableTest2() throws InterruptedException, ConnectionUnavailableException {
+        log.info("defineRedisTableTestCase 2 - Table with a primary key and an index column");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -71,12 +70,10 @@ public class DefineRedisTableTestCase {
                 "@PrimaryKey('name')" +
                 "@index('amount')" +
                 "define table fooTable(name string, amount double); ";
-
         String query = "" +
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -92,18 +89,17 @@ public class DefineRedisTableTestCase {
 
     @Test
     public void defineRedisTableTest3() throws InterruptedException, ConnectionUnavailableException {
+        log.info("defineRedisTableTestCase 3 - Table without a primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
                 "@store(type='redis', host='localhost', " +
                 "port='6379', table.name='fooTable', password= 'root')" +
                 "define table fooTable(name string, amount double); ";
-
         String query = "" +
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -118,7 +114,8 @@ public class DefineRedisTableTestCase {
     }
 
     @Test
-    public void defineRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
+    public void defineRedisTableTest4() throws InterruptedException, ConnectionUnavailableException {
+        log.info("defineRedisTableTestCase 4 - Table with an index column");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
@@ -126,15 +123,14 @@ public class DefineRedisTableTestCase {
                 "port='6379', table.name='fooTable', password= 'root')" +
                 "@index('amount')" +
                 "define table fooTable(name string, amount double); ";
-
         String query = "" +
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        LOG.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
+
         stockStream.send(new Object[]{"WSO2", 100.0});
         stockStream.send(new Object[]{"IBM", 1001});
 

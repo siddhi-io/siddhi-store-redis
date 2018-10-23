@@ -64,7 +64,7 @@ public class ReadFromRedisTableTestCase {
     @Test
     public void readEventRedisTableTestCase1() throws InterruptedException, ConnectionUnavailableException {
         //Read events from a Redis table successfully
-        log.info("readEventRedisTableTestCase1");
+        log.info("readEventRedisTableTestCase 1 - Read events using primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -75,7 +75,6 @@ public class ReadFromRedisTableTestCase {
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price float, volume long); ";
-
         String query = "" +
                 "@info(name = 'query1')\n" +
                 "from StockStream\n" +
@@ -87,7 +86,6 @@ public class ReadFromRedisTableTestCase {
                 "select searchStream.symbol as symbol, StockTable.price as price, " +
                 "StockTable.volume as volume\n " +
                 "insert into OutputStream; ";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler searchStream = siddhiAppRuntime.getInputHandler("searchStream");
@@ -117,7 +115,6 @@ public class ReadFromRedisTableTestCase {
                 eventArrived = true;
             }
         });
-
         siddhiAppRuntime.start();
 
         stockStream.send(new Object[]{"WSO2", 50.0F, 100L});
@@ -127,20 +124,17 @@ public class ReadFromRedisTableTestCase {
         searchStream.send(new Object[]{"WSO2"});
         searchStream.send(new Object[]{"IBM"});
 
-        await().atMost(5, TimeUnit.SECONDS);
-
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
-
     }
 
     @Test
     public void readEventRedisTableTestCase2() throws InterruptedException, ConnectionUnavailableException {
         //Read events from a Redis table successfully
-        log.info("readEventRedisTableTestCase2");
+        log.info("readEventRedisTableTestCase 2 - Read event from table using index");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -151,7 +145,6 @@ public class ReadFromRedisTableTestCase {
                 "@PrimaryKey('symbol')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price float, volume long); ";
-
         String query = "" +
                 "@info(name = 'query1')\n" +
                 "from StockStream\n" +
@@ -163,7 +156,6 @@ public class ReadFromRedisTableTestCase {
                 "select StockTable.symbol as symbol, searchStream.price as price,  " +
                 "StockTable.volume as volume\n " +
                 "insert into OutputStream; ";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler searchStream = siddhiAppRuntime.getInputHandler("searchStream");
@@ -193,16 +185,13 @@ public class ReadFromRedisTableTestCase {
                 eventArrived = true;
             }
         });
-
         siddhiAppRuntime.start();
-
         stockStream.send(new Object[]{"WSO2", 50.0F, 100L});
         stockStream.send(new Object[]{"CSC", 40.F, 10L});
         stockStream.send(new Object[]{"IBM", 30.F, 10L});
 
         searchStream.send(new Object[]{40.F});
         searchStream.send(new Object[]{30.F});
-        await().atMost(5, TimeUnit.SECONDS);
 
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
@@ -214,7 +203,7 @@ public class ReadFromRedisTableTestCase {
     @Test
     public void readEventRedisTableTestCase3() throws InterruptedException, ConnectionUnavailableException {
         //Read events from a Redis table successfully
-        log.info("readEventRedisTableTestCase3");
+        log.info("readEventRedisTableTestCase 3 - Read event from a table without primary key using index column");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
                 "define stream StockStream (symbol string, price float, volume long); " +
@@ -224,7 +213,6 @@ public class ReadFromRedisTableTestCase {
                 "password='root')" +
                 "@index('price')" +
                 "define table StockTable (symbol string, price float, volume long); ";
-
         String query = "" +
                 "@info(name = 'query1')\n" +
                 "from StockStream\n" +
@@ -233,10 +221,8 @@ public class ReadFromRedisTableTestCase {
                 " " +
                 "@info(name = 'query2')\n" +
                 "from searchStream#window.length(1) join StockTable on searchStream.price==StockTable.price " +
-                "select StockTable.symbol as symbol, searchStream.price as price,  " +
-                "StockTable.volume as volume\n " +
+                "select StockTable.symbol as symbol, searchStream.price as price, StockTable.volume as volume\n " +
                 "insert into OutputStream; ";
-
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         InputHandler searchStream = siddhiAppRuntime.getInputHandler("searchStream");
@@ -263,20 +249,16 @@ public class ReadFromRedisTableTestCase {
                 eventArrived = true;
             }
         });
-
         siddhiAppRuntime.start();
-
         stockStream.send(new Object[]{"WSO2", 50.0F, 100L});
         stockStream.send(new Object[]{"CSC", 40.F, 10L});
         stockStream.send(new Object[]{"IBM", 30.F, 10L});
 
         searchStream.send(new Object[]{40.F});
-        await().atMost(5, TimeUnit.SECONDS);
 
         Assert.assertEquals(inEventCount, 1, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
-
         siddhiAppRuntime.shutdown();
         RedisTestUtils.cleanRedisDatabase();
     }

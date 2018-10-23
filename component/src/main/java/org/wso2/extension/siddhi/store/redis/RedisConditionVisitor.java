@@ -29,11 +29,9 @@ import org.wso2.siddhi.query.api.expression.condition.Compare;
  * Redis Condition Visitor class
  **/
 public class RedisConditionVisitor extends BaseExpressionVisitor {
-
     private boolean isBeginCompareRightOperand;
     private boolean isStoreVariableOnRight;
     private volatile BasicCompareOperation currentOperation;
-
 
     RedisConditionVisitor() {
         currentOperation = new BasicCompareOperation();
@@ -46,7 +44,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitAnd() {
         throw new OperationNotSupportedException("AND operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitAnd() {
@@ -76,7 +75,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitOr() {
         throw new OperationNotSupportedException("OR operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitOr() {
@@ -106,7 +106,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitNot() {
         throw new OperationNotSupportedException("NOT operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitNot() {
@@ -145,18 +146,15 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
                 currentOperation.setOperator(Compare.Operator.EQUAL);
             } else {
                 throw new OperationNotSupportedException("Redis store extension does not support comparison " +
-                        "operations " +
-                        "other than EQUAL operation");
+                        "operations other than EQUAL operation");
             }
         } else {
             isStoreVariableOnRight = false;
             if (operator.equals(Compare.Operator.EQUAL)) {
                 currentOperation.setOperator(Compare.Operator.EQUAL);
             } else {
-                throw new OperationNotSupportedException("Redis store extension does not " +
-                        "support comparison " +
-                        "operations " +
-                        "other than EQUAL operation");
+                throw new OperationNotSupportedException("Redis store extension does not support comparison " +
+                        "operations other than EQUAL operation");
             }
         }
     }
@@ -164,7 +162,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitIsNull(String streamId) {
         throw new OperationNotSupportedException("IsNull operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitIsNull(String streamId) {
@@ -174,7 +173,8 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     @Override
     public void beginVisitIn(String storeId) {
         throw new OperationNotSupportedException("In operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitIn(String storeId) {
@@ -190,14 +190,13 @@ public class RedisConditionVisitor extends BaseExpressionVisitor {
     public void endVisitConstant(Object value, Attribute.Type type) {
         StreamVariable streamVariable = new StreamVariable(value.toString());
         currentOperation.setStreamVariable(streamVariable);
-
     }
 
     @Override
     public void beginVisitMath(MathOperator mathOperator) {
-
         throw new OperationNotSupportedException("Math operations are not supported by the Redis Table " +
-                "extension. Please check your query and try again");    }
+                "extension. Please check your query and try again");
+    }
 
     @Override
     public void endVisitMath(MathOperator mathOperator) {
