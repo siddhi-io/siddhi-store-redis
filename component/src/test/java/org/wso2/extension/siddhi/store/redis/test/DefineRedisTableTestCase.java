@@ -74,7 +74,6 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -101,7 +100,6 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();
@@ -129,7 +127,6 @@ public class DefineRedisTableTestCase {
                 "@info(name = 'query1') " +
                 "from StockStream " +
                 "insert into fooTable; ";
-        log.info(streams + query);
         SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
         InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
         siddhiAppRuntime.start();

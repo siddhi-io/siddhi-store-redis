@@ -124,7 +124,6 @@ public class ReadFromRedisTableTestCase {
         searchStream.send(new Object[]{"WSO2"});
         searchStream.send(new Object[]{"IBM"});
 
-        await().atMost(5, TimeUnit.SECONDS);
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
@@ -194,7 +193,6 @@ public class ReadFromRedisTableTestCase {
         searchStream.send(new Object[]{40.F});
         searchStream.send(new Object[]{30.F});
 
-        await().atMost(5, TimeUnit.SECONDS);
         Assert.assertEquals(inEventCount, 2, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
@@ -258,7 +256,6 @@ public class ReadFromRedisTableTestCase {
 
         searchStream.send(new Object[]{40.F});
 
-        await().atMost(5, TimeUnit.SECONDS);
         Assert.assertEquals(inEventCount, 1, "Number of success events");
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
