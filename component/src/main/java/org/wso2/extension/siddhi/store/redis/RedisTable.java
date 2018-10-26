@@ -68,7 +68,9 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
         name = "redis",
         namespace = "store",
         description = "This extension assigns data source and connection instructions to event tables. It also " +
-                "implements read write operations on connected datasource",
+                "implements read write operations on connected datasource. This extension only can be used to read " +
+                "the data which persisted using the same extension since unique implementation has been used to map " +
+                "the relational data in to redis's key and value representation",
         parameters = {
                 @Parameter(name = "host",
                         description = "host name of the redis server",
