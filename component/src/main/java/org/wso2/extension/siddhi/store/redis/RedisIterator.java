@@ -20,10 +20,11 @@ package org.wso2.extension.siddhi.store.redis;
 
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
+import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.core.table.record.RecordIterator;
 import org.wso2.siddhi.query.api.definition.Attribute;
-import redis.clients.jedis.Jedis;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
@@ -39,9 +40,10 @@ import java.util.Map;
  * Redis iterator Class
  **/
 public class RedisIterator implements RecordIterator<Object[]> {
-    private Jedis jedis;
+    private RedisInstance redisInstance;
     private Map<String, String> resultMap = new HashMap<>();
     private ScanResult scanResults;
+    private List<String> allResults;
     private List<Attribute> attributes;
     private String tableName;
     private List scanResultsList = new ArrayList();
@@ -57,16 +59,19 @@ public class RedisIterator implements RecordIterator<Object[]> {
     private StreamVariable streamVariable;
     private Long stringCursor = RedisTableConstants.REDIS_DEFAULT_CURSOR;
     private Iterator<Object[]> iterator;
+    private List<HostAndPort> hostAndPorts;
 
-    public RedisIterator(Jedis jedis, List<Attribute> attributes, BasicCompareOperation query, String tableName,
-                         List<String> primaryKeys, List<String> indexes) {
-        this.jedis = jedis;
+    public RedisIterator(RedisInstance redisInstance, List<Attribute> attributes, BasicCompareOperation query,
+                         String tableName, List<String> primaryKeys, List<String> indexes,
+                         List<HostAndPort> hostAndPorts) {
+        this.redisInstance = redisInstance;
         this.attributes = attributes;
         this.tableName = tableName;
         this.initialTraverse = true;
         this.query = query;
         this.primaryKeys = primaryKeys;
         this.indexes = indexes;
+        this.hostAndPorts = hostAndPorts;
     }
 
     @Override
@@ -81,6 +86,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
         result = null;
         scanResultsList = null;
         scanResults = null;
+        allResults = null;
     }
 
     @Override
@@ -156,7 +162,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
     private List<Object[]> fetchResultsByPrimaryKey() {
         List<Object[]> resultList = new ArrayList<>();
         if (isInitialTraverse) {
-            resultMap = jedis.hgetAll(tableName + ":" + streamVariable.getName());
+            resultMap = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
             if (resultMap != null && !resultMap.isEmpty()) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
@@ -186,7 +192,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
             return resultList;
         }
         scanResultsList.forEach(scanResult -> {
-            resultMap = jedis.hgetAll(scanResult.toString());
+            resultMap = redisInstance.hgetAll(scanResult.toString());
             if (resultMap != null) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
@@ -196,7 +202,7 @@ public class RedisIterator implements RecordIterator<Object[]> {
     }
 
     private List fetchBatchOfResultsFromIndexTable(ScanParams scanParams) {
-        scanResults = jedis.sscan(tableName + ":" + storeVariable.getName() + ":"
+        scanResults = redisInstance.sscan(tableName + ":" + storeVariable.getName() + ":"
                 + streamVariable.getName(), String.valueOf(stringCursor), scanParams);
         stringCursor = Long.valueOf(scanResults.getStringCursor());
         return scanResults.getResult();
@@ -210,18 +216,11 @@ public class RedisIterator implements RecordIterator<Object[]> {
             if (scanResultsList.isEmpty()) {
                 return resultList;
             }
-        } else if (scanResultsList.isEmpty() && stringCursor > 0) {
-            this.scanResultsList = fetchBatchOfResultsFromTable();
-            if (scanResultsList.isEmpty()) {
-                return resultList;
-            }
-        } else if (scanResultsList.isEmpty() && stringCursor == 0) {
-            return resultList;
         }
         scanResultsList.forEach(e -> {
-            String type = jedis.type(e.toString());
+            String type = redisInstance.type(e.toString());
             if (type.equalsIgnoreCase("hash")) {
-                resultMap = jedis.hgetAll(e.toString());
+                resultMap = redisInstance.hgetAll(e.toString());
                 if (resultMap != null) {
                     result = resultsGenerator(resultMap);
                     resultList.add(result);
@@ -235,9 +234,8 @@ public class RedisIterator implements RecordIterator<Object[]> {
         ScanParams scanParams = new ScanParams();
         scanParams.match(tableName + ":*");
         scanParams.count(RedisTableConstants.REDIS_BATCH_SIZE);
-        scanResults = jedis.scan(String.valueOf(stringCursor), scanParams);
-        stringCursor = Long.valueOf(scanResults.getStringCursor());
-        return scanResults.getResult();
+        allResults = redisInstance.scan(hostAndPorts, scanParams);
+        return allResults;
     }
 
     private Object[] resultsGenerator(Map<String, String> resultMap) {
