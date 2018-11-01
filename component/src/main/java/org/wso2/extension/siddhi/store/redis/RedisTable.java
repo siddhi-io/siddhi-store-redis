@@ -24,7 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
+import org.wso2.extension.siddhi.store.redis.utils.RedisClusterInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
+import org.wso2.extension.siddhi.store.redis.utils.RedisSingleNodeInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -325,7 +327,7 @@ public class RedisTable extends AbstractRecordTable {
                 if (clusterModeEnabled) {
                     Set<HostAndPort> jedisClusterNodes = new HashSet<>(hostAndPortList);
                     jedisCluster = new JedisCluster(jedisClusterNodes);
-                    redisInstance = new RedisInstance(jedisCluster);
+                    redisInstance = new RedisClusterInstance(jedisCluster);
                 } else {
                     jedisPool = new JedisPool(new GenericObjectPoolConfig(), host, port);
                     jedis = jedisPool.getResource();
@@ -333,7 +335,7 @@ public class RedisTable extends AbstractRecordTable {
                     if (password != null) {
                         jedis.auth(String.valueOf(password));
                     }
-                    redisInstance = new RedisInstance(jedis);
+                    redisInstance = new RedisSingleNodeInstance(jedis);
                 }
             }
         } catch (JedisConnectionException e) {

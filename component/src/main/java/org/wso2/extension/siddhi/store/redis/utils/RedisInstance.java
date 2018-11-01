@@ -19,135 +19,36 @@
 package org.wso2.extension.siddhi.store.redis.utils;
 
 import redis.clients.jedis.HostAndPort;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Redis Instance class
  **/
-public class RedisInstance {
-    private JedisCluster jedisCluster;
-    private Jedis jedis;
-    private Boolean clusterMode = false;
-    private List<String> keys = new ArrayList<String>();
-    private boolean initialTraverse = true;
+public interface RedisInstance {
 
-    public RedisInstance(JedisCluster jedis) {
-        this.jedisCluster = jedis;
-        this.clusterMode = true;
-    }
+    void hmset(String key, Map<String, String> values);
 
-    public RedisInstance(Jedis jedis) {
-        this.jedis = jedis;
-    }
+    void hset(String key, String field, String value);
 
-    public void hmset(String key, Map<String, String> values) {
-        if (clusterMode) {
-            jedisCluster.hmset(key, values);
-        } else {
-            jedis.hmset(key, values);
-        }
-    }
+    String hget(String key, String field);
 
-    public void hset(String key, String field, String value) {
-        if (clusterMode) {
-            jedisCluster.hset(key, field, value);
-        } else {
-            jedis.hset(key, field, value);
-        }
-    }
+    void sadd(String key, String... member);
 
-    public String hget(String key, String field) {
-        if (clusterMode) {
-            return jedisCluster.hget(key, field);
-        } else {
-            return jedis.hget(key, field);
-        }
-    }
+    void srem(String key, String... member);
 
-    public void sadd(String key, String... member) {
-        if (clusterMode) {
-            jedisCluster.sadd(key, member);
-        } else {
-            jedis.sadd(key, member);
-        }
-    }
+    void del(String key);
 
-    public void srem(String key, String... member) {
-        if (clusterMode) {
-            jedisCluster.srem(key, member);
-        } else {
-            jedis.srem(key, member);
-        }
-    }
+    ScanResult<String> sscan(String key, String cursor, ScanParams scanParams);
 
-    public void del(String key) {
-        if (clusterMode) {
-            jedisCluster.del(key);
-        } else {
-            jedis.del(key);
-        }
-    }
+    ScanResult<String> sscan(String key, String cursor);
 
-    public ScanResult<String> sscan(String key, String cursor, ScanParams scanParams) {
-        if (clusterMode) {
-            return jedisCluster.sscan(key, cursor, scanParams);
-        } else {
-            return jedis.sscan(key, cursor, scanParams);
-        }
-    }
+    Map<String, String> hgetAll(String key);
 
-    public ScanResult<String> sscan(String key, String cursor) {
-        if (clusterMode) {
-            return jedisCluster.sscan(key, cursor);
-        } else {
-            return jedis.sscan(key, cursor);
-        }
-    }
+    List<String> scan(List<HostAndPort> nodes, ScanParams scanParams);
 
-    public Map<String, String> hgetAll(String key) {
-        if (clusterMode) {
-            return jedisCluster.hgetAll(key);
-        } else {
-            return jedis.hgetAll(key);
-        }
-    }
-
-    public List<String> scan(List<HostAndPort> nodes, ScanParams scanParams) {
-        int iterator = 0;
-        if (initialTraverse) {
-            initialTraverse = false;
-            keys = new ArrayList<>(Collections.nCopies(nodes.size(), "0"));
-        }
-        ScanResult<String> scanResult;
-        List<String> resultList = new ArrayList<>();
-        for (HostAndPort node : nodes) {
-            try (Jedis jedisNode = new Jedis(node.getHost(), node.getPort())) {
-                scanResult = jedisNode.scan(keys.get(iterator), scanParams);
-                resultList.addAll(scanResult.getResult());
-                keys.set(iterator, scanResult.getStringCursor());
-                iterator++;
-            }
-        }
-        if (keys.stream().allMatch("0"::equals)) {
-            keys.clear();
-            initialTraverse = true;
-        }
-        return resultList;
-    }
-
-    public String type(String key) {
-        if (clusterMode) {
-            return jedisCluster.type(key);
-        } else {
-            return jedis.type(key);
-        }
-    }
+    String type(String key);
 }
