@@ -125,7 +125,6 @@ public class RedisInstance {
         if (initialTraverse) {
             initialTraverse = false;
             keys = new ArrayList<>(Collections.nCopies(nodes.size(), "0"));
-
         }
         ScanResult<String> scanResult;
         List<String> resultList = new ArrayList<>();
