@@ -107,7 +107,7 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                         description = "host, port and the password of the node(s). In clustered mode host and port of" +
                                 " all the master nodes should be provided separated by a comma(,). As an example " +
                                 "\"" + "nodes = 'localhost:30001,localhost:30002'\"" + ". If this is not provided in " +
-                                "clustered mode, error will be thrown",
+                                "clustered mode, an error will be thrown",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "null"),
         },
