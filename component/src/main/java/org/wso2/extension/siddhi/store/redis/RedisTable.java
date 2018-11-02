@@ -104,15 +104,17 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                         type = {DataType.BOOL},
                         defaultValue = "false"),
                 @Parameter(name = "nodes",
-                        description = "host and the port of Master nodes of the cluster. If this is not provided in " +
-                                "when the redis deployment is a clustered deployment",
+                        description = "host, port and the password of the node(s). In clustered mode host and port of" +
+                                " all the master nodes should be provided separated by a comma(,). As an example " +
+                                "\"" + "nodes = 'localhost:30001,localhost:30002'\"" + ". If this is not provided in " +
+                                "clustered mode, error will be thrown",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "null"),
         },
         examples = {
                 @Example(
-                        syntax = "@store(type='redis',host='localhost',port=6379,password='root'," +
-                                "table.name='fooTable',cluster.mode=false)" +
+                        syntax = "@store(type='redis',nodes='localhost:6379@root',table.name='fooTable'," +
+                                "cluster.mode=false)" +
                                 "define table fooTable(time long, date String)",
                         description = "Above example will create a redis table with the name fooTable and work on a" +
                                 "single redis node."
@@ -125,7 +127,8 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                                 "define table SweetProductionTable (symbol string, price float, volume long);",
                         description = "Above example demonstrate how to use the redis extension to connect in to " +
                                 "redis cluster. Please note that, as nodes all the master node's host and port should" +
-                                " be provided in order to work correctly. "
+                                " be provided in order to work correctly. In clustered node password will not be" +
+                                "supported"
                 )
         }
 )
@@ -137,7 +140,6 @@ public class RedisTable extends AbstractRecordTable {
     private JedisPool jedisPool;
     private String host = RedisTableConstants.DEFAULT_HOST;
     private char[] password;
-    private List<char[]> clusterPasswords = new ArrayList<>();
     private int port = RedisTableConstants.DEFAULT_PORT;
     private String tableName;
     private JedisCluster jedisCluster;
@@ -166,35 +168,43 @@ public class RedisTable extends AbstractRecordTable {
             List<Element> indexingElements = indexAnnotation.getElements();
             indexingElements.forEach(element -> this.indices.add(element.getValue().trim()));
         }
-        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST) != null) {
-            host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);
-        }
         if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_CLUSTER_MODE) != null) {
             clusterModeEnabled = Boolean.parseBoolean(storeAnnotation.getElement(RedisTableConstants
                     .ANNOTATION_ELEMENT_CLUSTER_MODE));
         }
+        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST) != null) {
+            host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);
+        }
         if (clusterModeEnabled) {
-            if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_CLUSTER_NODES) != null) {
-                String[] nodes = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_CLUSTER_NODES)
+            if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
+                String[] nodes = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES)
                         .split(",");
                 for (String node : nodes) {
-                    String[] nodeDetails = node.split("@");
-                    if (nodeDetails.length > 0) {
-                        String[] clusterHostAndPort = nodeDetails[0].split(":");
-                        if (nodeDetails[0].split(":").length == 2) {
-                            hostAndPortList.add(new HostAndPort(clusterHostAndPort[0], Integer.parseInt
-                                    (clusterHostAndPort[1])));
-                        }
-                    }
-                    if (nodeDetails.length == 2) {
-                        clusterPasswords.add(nodeDetails[1].toCharArray());
-                    } else {
-                        clusterPasswords.add(null);
+                    String[] clusterHostAndPort = node.split(":");
+                    if (node.split(":").length == 2) {
+                        hostAndPortList.add(new HostAndPort(clusterHostAndPort[0], Integer.parseInt
+                                (clusterHostAndPort[1])));
                     }
                 }
             } else {
                 throw new RedisTableException("Cluster node details should be provided when creating a clustered " +
                         "connection to the table '" + tableName);
+            }
+
+        } else {
+            if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
+                String node = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES);
+                String[] nodeDetails = node.split("@");
+                if (nodeDetails.length > 0) {
+                    String[] clusterHostAndPort = nodeDetails[0].split(":");
+                    if (nodeDetails[0].split(":").length == 2) {
+                        host = clusterHostAndPort[0];
+                        port = Integer.parseInt(clusterHostAndPort[1]);
+                    }
+                    if (nodeDetails.length == 2) {
+                        password = nodeDetails[1].toCharArray();
+                    }
+                }
             }
         }
         if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PORT) != null) {
@@ -247,7 +257,6 @@ public class RedisTable extends AbstractRecordTable {
                     + tableName + ". ", e);
         }
     }
-
 
     @Override
     protected RecordIterator<Object[]> find(Map<String, Object> findConditionParameterMap,
