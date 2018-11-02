@@ -79,25 +79,12 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                 "the data which persisted using the same extension since unique implementation has been used to map " +
                 "the relational data in to redis's key and value representation",
         parameters = {
-                @Parameter(name = "host",
-                        description = "host name of the redis server",
-                        type = {DataType.STRING}, optional = true,
-                        defaultValue = "null"),
-                @Parameter(name = "port",
-                        description = "port which redis server can be accessed. If this is not specified via the " +
-                                "parameter,the default redis port '6379' will be used",
-                        type = {DataType.LONG}, optional = true, defaultValue = "6379"),
-
                 @Parameter(name = "table.name",
                         description = "The name with which the event table should be persisted in the store. If no" +
                                 "name is specified via this parameter, the event table is persisted with the same " +
                                 "name as the Siddhi table.",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "The tale name defined in the siddhi app"),
-                @Parameter(name = "password",
-                        description = "password to connect to redis server",
-                        type = {DataType.STRING}, optional = true,
-                        defaultValue = "will try to connect without authentication"),
                 @Parameter(name = "cluster.mode",
                         description = "This will decide the redis mode. if this is false, client will connect to a " +
                                 "single redis node.",
