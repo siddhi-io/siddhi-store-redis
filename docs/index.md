@@ -13,7 +13,7 @@ Find some useful links below:
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.10">1.0.10</a>.
+Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.11">1.0.11</a>.
 
 ## Prerequisites
  
@@ -24,12 +24,12 @@ Redis Server instance should be started and ready to connect via redis java API.
 **Using the extension in <a target="_blank" href="https://github.com/wso2/product-sp">WSO2 Stream Processor</a>**
 
 * You can use this extension in the latest <a target="_blank" href="https://github.com/wso2/product-sp/releases">WSO2 Stream Processor</a> that is a part of <a target="_blank" href="http://wso2.com/analytics?utm_source=gitanalytics&utm_campaign=gitanalytics_Jul17">WSO2 Analytics</a> offering, with editor, debugger and simulation support. 
-
+* This extension can be used to connect into Redis cluster or a single redis node(Tested on Redis 5.0).
 * This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this 
 extension you can replace the component <a target="_blank" href="https://github
 .com/wso2-extensions/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` 
 directory.
-* This extension depends on Jedis, redis client. Please download redis client jar (>2.7.0) and place in `<STREAM_PROCESSOR_HOME>/lib` directory.
+* This extension depends on Jedis, redis client. Please download redis client jar (2.9.0) and place in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
 **Using the extension as a <a target="_blank" href="https://wso2.github.io/siddhi/documentation/running-as-a-java-library">java library</a>**
 
@@ -55,7 +55,7 @@ directory.
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.10/#redis-store">redis</a> *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>*<br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource. This extension only can be used to read the data which persisted using the same extension since unique implementation has been used to map the relational data in to redis's key and value representation</p></div>
+* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/1.0.11/#redis-store">redis</a> *<a target="_blank" href="https://wso2.github.io/siddhi/documentation/siddhi-4.0/#store">(Store)</a>*<br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource. This extension only can be used to read the data which persisted using the same extension since unique implementation has been used to map the relational data in to redis's key and value representation</p></div>
 
 ## How to Contribute
  
