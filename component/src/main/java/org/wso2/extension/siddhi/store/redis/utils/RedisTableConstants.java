@@ -22,9 +22,10 @@ package org.wso2.extension.siddhi.store.redis.utils;
  * This class contains the constance which used in this store
  **/
 public class RedisTableConstants {
-    private RedisTableConstants(){
+    private RedisTableConstants() {
         //preventing initialization
     }
+
     public static final String ANNOTATION_ELEMENT_HOST = "host";
     public static final String ANNOTATION_ELEMENT_PORT = "port";
     public static final String ANNOTATION_ELEMENT_PASSWORD = "password";

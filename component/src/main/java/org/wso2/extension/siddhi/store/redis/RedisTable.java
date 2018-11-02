@@ -58,6 +58,7 @@ import redis.clients.jedis.exceptions.JedisException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -91,12 +92,12 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                         type = {DataType.BOOL},
                         defaultValue = "false"),
                 @Parameter(name = "nodes",
-                        description = "host, port and the password of the node(s). In clustered mode host and port of" +
-                                " all the master nodes should be provided separated by a comma(,). As an example " +
-                                "\"" + "nodes = 'localhost:30001,localhost:30002'\"" + ". If this is not provided in " +
-                                "clustered mode, an error will be thrown",
+                        description = "host, port and the password of the node(s).In single node mode node details " +
+                                "can be provided as follows- \"node='hosts:port@password'\" \nIn clustered mode host " +
+                                "and port of all the master nodes should be provided separated by a comma(,). As an " +
+                                "example \"nodes = 'localhost:30001,localhost:30002'\".",
                         type = {DataType.STRING}, optional = true,
-                        defaultValue = "null"),
+                        defaultValue = "localhost:6379@root"),
         },
         examples = {
                 @Example(
@@ -133,7 +134,7 @@ public class RedisTable extends AbstractRecordTable {
     private Jedis jedis;
     private List<String> indices = new ArrayList<>();
     private Boolean clusterModeEnabled = false;
-    private List<HostAndPort> hostAndPortList = new ArrayList<>();
+    private List<HostAndPort> hostAndPortList = Arrays.asList(new HostAndPort(host, port));
     private RedisInstance redisInstance;
 
     @Override
@@ -163,6 +164,7 @@ public class RedisTable extends AbstractRecordTable {
             host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);
         }
         if (clusterModeEnabled) {
+            hostAndPortList = new ArrayList<>();
             if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
                 String[] nodes = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES)
                         .split(",");
@@ -173,11 +175,7 @@ public class RedisTable extends AbstractRecordTable {
                                 (clusterHostAndPort[1])));
                     }
                 }
-            } else {
-                throw new RedisTableException("Cluster node details should be provided when creating a clustered " +
-                        "connection to the table '" + tableName);
             }
-
         } else {
             if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
                 String node = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES);
