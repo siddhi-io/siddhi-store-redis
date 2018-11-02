@@ -24,6 +24,9 @@ import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
+import org.wso2.extension.siddhi.store.redis.utils.RedisClusterInstance;
+import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
+import org.wso2.extension.siddhi.store.redis.utils.RedisSingleNodeInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
@@ -43,7 +46,9 @@ import org.wso2.siddhi.query.api.annotation.Element;
 import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.definition.TableDefinition;
 import org.wso2.siddhi.query.api.util.AnnotationHelper;
+import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisCluster;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
@@ -51,11 +56,14 @@ import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
 
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.generateRecordID;
 import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolveCondition;
@@ -72,31 +80,43 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                 "the data which persisted using the same extension since unique implementation has been used to map " +
                 "the relational data in to redis's key and value representation",
         parameters = {
-                @Parameter(name = "host",
-                        description = "host name of the redis server",
-                        type = {DataType.STRING}),
-                @Parameter(name = "port",
-                        description = "port which redis server can be accessed. If this is not specified via the " +
-                                "parameter,the default redis port '6379' will be used",
-                        type = {DataType.LONG}, optional = true, defaultValue = "6379"),
-
                 @Parameter(name = "table.name",
                         description = "The name with which the event table should be persisted in the store. If no" +
                                 "name is specified via this parameter, the event table is persisted with the same " +
                                 "name as the Siddhi table.",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "The tale name defined in the siddhi app"),
-                @Parameter(name = "password",
-                        description = "password to connect to redis server",
+                @Parameter(name = "cluster.mode",
+                        description = "This will decide the redis mode. if this is false, client will connect to a " +
+                                "single redis node.",
+                        type = {DataType.BOOL},
+                        defaultValue = "false"),
+                @Parameter(name = "nodes",
+                        description = "host, port and the password of the node(s).In single node mode node details " +
+                                "can be provided as follows- \"node='hosts:port@password'\" \nIn clustered mode host " +
+                                "and port of all the master nodes should be provided separated by a comma(,). As an " +
+                                "example \"nodes = 'localhost:30001,localhost:30002'\".",
                         type = {DataType.STRING}, optional = true,
-                        defaultValue = "will try to connect without authentication")
+                        defaultValue = "localhost:6379@root"),
         },
         examples = {
                 @Example(
-                        syntax = "@store(type='redis',host='localhost',port=6379, password='root',table" +
-                                ".name='fooTable')" +
+                        syntax = "@store(type='redis',nodes='localhost:6379@root',table.name='fooTable'," +
+                                "cluster.mode=false)" +
                                 "define table fooTable(time long, date String)",
-                        description = "above collection will create a redis table with the name fooTable"
+                        description = "Above example will create a redis table with the name fooTable and work on a" +
+                                "single redis node."
+                ),
+                @Example(
+                        syntax = "@Store(type='redis', table.name='SweetProductionTable', " +
+                                "nodes='localhost:30001,localhost:30002,localhost:30003', cluster.mode='true')\n" +
+                                "@primaryKey('symbol')\n" +
+                                "@index('price') \n" +
+                                "define table SweetProductionTable (symbol string, price float, volume long);",
+                        description = "Above example demonstrate how to use the redis extension to connect in to " +
+                                "redis cluster. Please note that, as nodes all the master node's host and port should" +
+                                " be provided in order to work correctly. In clustered node password will not be" +
+                                "supported"
                 )
         }
 )
@@ -104,14 +124,18 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
 public class RedisTable extends AbstractRecordTable {
     private static final Logger log = LoggerFactory.getLogger(RedisTable.class);
     private List<Attribute> attributes;
-    private List<String> primaryKeys = Collections.emptyList();
+    private List<String> primaryKeys = new ArrayList<>();
     private JedisPool jedisPool;
     private String host = RedisTableConstants.DEFAULT_HOST;
     private char[] password;
     private int port = RedisTableConstants.DEFAULT_PORT;
     private String tableName;
+    private JedisCluster jedisCluster;
     private Jedis jedis;
-    private List<String> indices = Collections.emptyList();
+    private List<String> indices = new ArrayList<>();
+    private Boolean clusterModeEnabled = false;
+    private List<HostAndPort> hostAndPortList = Arrays.asList(new HostAndPort(host, port));
+    private RedisInstance redisInstance;
 
     @Override
     protected void init(TableDefinition tableDefinition, ConfigReader configReader) {
@@ -129,11 +153,45 @@ public class RedisTable extends AbstractRecordTable {
             primaryKeyAnnotation.getElements().forEach(element -> this.primaryKeys.add(element.getValue().trim()));
         }
         if (indexAnnotation != null) {
-            this.indices = new ArrayList<>();
             List<Element> indexingElements = indexAnnotation.getElements();
             indexingElements.forEach(element -> this.indices.add(element.getValue().trim()));
         }
-        host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);
+        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_CLUSTER_MODE) != null) {
+            clusterModeEnabled = Boolean.parseBoolean(storeAnnotation.getElement(RedisTableConstants
+                    .ANNOTATION_ELEMENT_CLUSTER_MODE));
+        }
+        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST) != null) {
+            host = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_HOST);
+        }
+        if (clusterModeEnabled) {
+            hostAndPortList = new ArrayList<>();
+            if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
+                String[] nodes = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES)
+                        .split(",");
+                for (String node : nodes) {
+                    String[] clusterHostAndPort = node.split(":");
+                    if (node.split(":").length == 2) {
+                        hostAndPortList.add(new HostAndPort(clusterHostAndPort[0], Integer.parseInt
+                                (clusterHostAndPort[1])));
+                    }
+                }
+            }
+        } else {
+            if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES) != null) {
+                String node = storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_NODES);
+                String[] nodeDetails = node.split("@");
+                if (nodeDetails.length > 0) {
+                    String[] clusterHostAndPort = nodeDetails[0].split(":");
+                    if (nodeDetails[0].split(":").length == 2) {
+                        host = clusterHostAndPort[0];
+                        port = Integer.parseInt(clusterHostAndPort[1]);
+                    }
+                    if (nodeDetails.length == 2) {
+                        password = nodeDetails[1].toCharArray();
+                    }
+                }
+            }
+        }
         if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PORT) != null) {
             port = Integer.parseInt(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_PORT));
         }
@@ -158,12 +216,17 @@ public class RedisTable extends AbstractRecordTable {
                     attributeMap.put(attribute.getName(), record[i++].toString());
                 }
                 if (primaryKeys != null && !primaryKeys.isEmpty()) {
+                    if (isRecordExists(attributeMap)) {
+                        throw new RedisTableException("Error While adding record to the table '" + tableName + "'. " +
+                                "Record exists for primary key '" + primaryKeys.get(0) + "' with the value of " +
+                                "'" + attributeMap.get(primaryKeys.get(0)) + "'. ");
+                    }
                     createTablesWithPrimaryKey(attributeMap, keyGenBuilder);
                 } else {
                     //generate a record id for each record if the primaryKey is not defined
                     String id = generateRecordID();
                     keyGenBuilder.append(":").append(id);
-                    jedis.hmset(keyGenBuilder.toString(), attributeMap);
+                    redisInstance.hmset(keyGenBuilder.toString(), attributeMap);
                     if (indices != null && !indices.isEmpty()) {
                         //create a set for each indexed column
                         createIndexTable(attributeMap, keyGenBuilder);
@@ -180,14 +243,14 @@ public class RedisTable extends AbstractRecordTable {
         }
     }
 
-
     @Override
     protected RecordIterator<Object[]> find(Map<String, Object> findConditionParameterMap,
                                             CompiledCondition compiledCondition) throws ConnectionUnavailableException {
         try {
             BasicCompareOperation condition = resolveCondition((RedisCompliedCondition) compiledCondition,
                     findConditionParameterMap);
-            return new RedisIterator(jedis, attributes, condition, tableName, primaryKeys, indices);
+            return new RedisIterator(redisInstance, attributes, condition, tableName, primaryKeys, indices,
+                    hostAndPortList);
         } catch (JedisDataException e) {
             throw new RedisTableException("Error while searching the records in Redis Event Table : " + tableName, e);
         }
@@ -204,7 +267,6 @@ public class RedisTable extends AbstractRecordTable {
     protected void delete(List<Map<String, Object>> deleteConditionParameterMaps, CompiledCondition compiledCondition)
             throws ConnectionUnavailableException {
         try {
-
             for (Map<String, Object> deleteConditionParameter : deleteConditionParameterMaps) {
                 BasicCompareOperation condition = resolveCondition((RedisCompliedCondition) compiledCondition,
                         deleteConditionParameter);
@@ -256,11 +318,18 @@ public class RedisTable extends AbstractRecordTable {
     protected void connect() throws ConnectionUnavailableException {
         try {
             if (jedisPool == null) {
-                jedisPool = new JedisPool(new GenericObjectPoolConfig(), host, port);
-                jedis = jedisPool.getResource();
-                //if authentication is provided use it to connect to redis server
-                if (password != null) {
-                    jedis.auth(String.valueOf(password));
+                if (clusterModeEnabled) {
+                    Set<HostAndPort> jedisClusterNodes = new HashSet<>(hostAndPortList);
+                    jedisCluster = new JedisCluster(jedisClusterNodes);
+                    redisInstance = new RedisClusterInstance(jedisCluster);
+                } else {
+                    jedisPool = new JedisPool(new GenericObjectPoolConfig(), host, port);
+                    jedis = jedisPool.getResource();
+                    //if authentication is provided use it to connect to redis server
+                    if (password != null) {
+                        jedis.auth(String.valueOf(password));
+                    }
+                    redisInstance = new RedisSingleNodeInstance(jedis);
                 }
             }
         } catch (JedisConnectionException e) {
@@ -269,13 +338,17 @@ public class RedisTable extends AbstractRecordTable {
         }
     }
 
+
     @Override
     protected void disconnect() {
         try {
+            if (clusterModeEnabled && jedisCluster != null) {
+                jedisCluster.close();
+            }
             if (jedisPool != null && !jedisPool.isClosed()) {
                 jedisPool.close();
             }
-        } catch (JedisConnectionException e) {
+        } catch (JedisConnectionException | IOException e) {
             log.error("Error while closing the redis client for table: " + tableName + " : ", e);
         }
     }
@@ -293,14 +366,14 @@ public class RedisTable extends AbstractRecordTable {
 
     private void createIndexTable(Map<String, String> attributeMap, StringBuilder builder) {
         for (String index : indices) {
-            jedis.sadd(tableName + ":" + index + ":" + attributeMap.get(index), builder.toString());
+            redisInstance.sadd(tableName + ":" + index + ":" + attributeMap.get(index), builder.toString());
         }
     }
 
     private void createTablesWithPrimaryKey(Map<String, String> attributeMap, StringBuilder keyGenBuilder) {
         keyGenBuilder.append(":").append(attributeMap.get(primaryKeys.get(0)));
         //create hashes for each record
-        jedis.hmset(keyGenBuilder.toString(), attributeMap);
+        redisInstance.hmset(keyGenBuilder.toString(), attributeMap);
         if (indices != null && !indices.isEmpty()) {
             //create a set for each indexed column
             createIndexTable(attributeMap, keyGenBuilder);
@@ -319,24 +392,20 @@ public class RedisTable extends AbstractRecordTable {
             deleteAllRecords();
         } else {
             if (primaryKeys.contains(storeVariable.getName())) {
-
-                recordMap = jedis.hgetAll(tableName + ":" + streamVariable.getName());
+                recordMap = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
                 for (String index : indices) {
-                    jedis.srem(tableName + ":" + index + ":" + recordMap.get(index), tableName + ":" +
+                    redisInstance.srem(tableName + ":" + index + ":" + recordMap.get(index), tableName + ":" +
                             streamVariable.getName());
                 }
-                jedis.del(tableName + ":" + streamVariable.getName());
-
+                redisInstance.del(tableName + ":" + streamVariable.getName());
             } else if (indices.contains(storeVariable.getName())) {
                 ScanResult indexedResults;
-
-                indexedResults = jedis.sscan(tableName + ":" + storeVariable.getName() + ":" +
+                indexedResults = redisInstance.sscan(tableName + ":" + storeVariable.getName() + ":" +
                         streamVariable.getName(), "0");
-
                 for (Object recordID : indexedResults.getResult()) {
-                    jedis.del(recordID.toString());
+                    redisInstance.del(recordID.toString());
                 }
-                jedis.del(tableName + ":" + storeVariable.getName() + ":" + streamVariable.getName());
+                redisInstance.del(tableName + ":" + storeVariable.getName() + ":" + streamVariable.getName());
             } else {
                 throw new OperationNotSupportedException("Cannot delete records by  '" + storeVariable.getName() +
                         "' since the field is nether indexed nor primary key");
@@ -345,31 +414,21 @@ public class RedisTable extends AbstractRecordTable {
     }
 
     private void deleteAllRecords() {
-        ScanResult scanResult;
-        List scanResultsList;
+        List<String> scanResult;
         ScanParams scanParams = new ScanParams();
         scanParams.match(tableName + ":*");
         scanParams.count(RedisTableConstants.REDIS_BATCH_SIZE);
-        scanResult = jedis.scan("0", scanParams);
-        scanResultsList = scanResult.getResult();
-        if (scanResult.getStringCursor().equals("0")) {
-            for (Object recodeID : scanResultsList) {
-                jedis.del(recodeID.toString());
+        scanResult = redisInstance.scan(hostAndPortList, scanParams);
+        while (!scanResult.isEmpty()) {
+            for (Object recodeID : scanResult) {
+                redisInstance.del(recodeID.toString());
             }
-        } else {
-            while (Long.parseLong(scanResult.getStringCursor()) > 0) {
-                scanResult = jedis.scan(scanResult.getStringCursor(), scanParams);
-                scanResultsList.addAll(scanResult.getResult());
-                if (!scanResultsList.isEmpty()) {
-                    for (Object recodeID : scanResultsList) {
-                        jedis.del(recodeID.toString());
-                    }
-                }
-            }
+            scanResult = redisInstance.scan(hostAndPortList, scanParams);
         }
     }
 
-    private void updateTable(CompiledCondition updateCondition, List<Map<String, Object>> updateSetParameterMaps,
+    private void updateTable(CompiledCondition
+                                     updateCondition, List<Map<String, Object>> updateSetParameterMaps,
                              List<Map<String, Object>> updateConditionParameterMaps, boolean updateOnly) {
         for (Map<String, Object> updateConditionParameter : updateConditionParameterMaps) {
             BasicCompareOperation condition = resolveCondition((RedisCompliedCondition) updateCondition,
@@ -377,7 +436,7 @@ public class RedisTable extends AbstractRecordTable {
             StoreVariable storeVariable = condition.getStoreVariable();
             StreamVariable streamVariable = condition.getStreamVariable();
             if (updateOnly && primaryKeys.contains(storeVariable.getName())) {
-                Map<String, String> exisetRecord = jedis.hgetAll(tableName + ":" + streamVariable.getName());
+                Map<String, String> exisetRecord = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
                 if (!exisetRecord.isEmpty()) {
                     updateOnPrimaryKey(updateSetParameterMaps, condition);
                 } else {
@@ -398,34 +457,37 @@ public class RedisTable extends AbstractRecordTable {
         }
     }
 
-    private void updateOnPrimaryKey(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation condition) {
+    private void updateOnPrimaryKey(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation
+            condition) {
         StreamVariable streamVariable = condition.getStreamVariable();
         for (Map<String, Object> updateSetParameters : updateSetParameterMaps) {
             for (Map.Entry<String, Object> entry : updateSetParameters.entrySet()) {
                 if (indices.contains(entry.getKey())) {
-                    String existingValue = jedis.hget(tableName + ":" + streamVariable.getName(), entry.getKey());
-                    jedis.srem(tableName + ":" + entry.getKey() + ":" + existingValue,
-                            (tableName + ":" + streamVariable.getName()));
-                    jedis.sadd(tableName + ":" + entry.getKey() + ":" + entry.getValue(),
+                    String existingValue = redisInstance.hget(tableName + ":" + streamVariable.getName(),
+                            entry.getKey());
+                    redisInstance.srem(tableName + ":" + entry.getKey() + ":" + existingValue,
+                            tableName + ":" + streamVariable.getName());
+                    redisInstance.sadd(tableName + ":" + entry.getKey() + ":" + entry.getValue(),
                             tableName + ":" + streamVariable.getName());
                 }
                 String hashKey = tableName + ":" + streamVariable.getName();
                 String key = entry.getKey();
                 String val = entry.getValue().toString();
-                jedis.hset(hashKey, key, val);
+                redisInstance.hset(hashKey, key, val);
             }
         }
     }
 
-    private void updateOrAddOnIndex(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation condition) {
+    private void updateOrAddOnIndex(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation
+            condition) {
         StoreVariable storeVariable = condition.getStoreVariable();
         StreamVariable streamVariable = condition.getStreamVariable();
         String redisKey = tableName + ":" + storeVariable.getName() + ":" + streamVariable.getName();
-        ScanResult result = jedis.sscan(redisKey, "0");
+        ScanResult result = redisInstance.sscan(redisKey, "0");
         List indexedResults = result.getResult();
         if (Long.parseLong(result.getStringCursor()) > 0) {
             while (Long.parseLong(result.getStringCursor()) > 0) {
-                result = jedis.sscan(redisKey, result.getStringCursor());
+                result = redisInstance.sscan(redisKey, result.getStringCursor());
                 indexedResults.addAll(result.getResult());
                 executeUpdateOperation(updateSetParameterMaps, indexedResults);
             }
@@ -454,11 +516,16 @@ public class RedisTable extends AbstractRecordTable {
     }
 
     private void executeUpdateOperationOnIndexedValues(Map.Entry<String, Object> entry, Object indexedResult) {
-        String oldValue = jedis.hget(indexedResult.toString(), entry.getKey());
-        jedis.hset(indexedResult.toString(), entry.getKey(), entry.getValue().toString());
-        jedis.sadd(tableName + ":" + entry.getKey() + ":" + entry.getValue(), indexedResult.toString());
+        String oldValue = redisInstance.hget(indexedResult.toString(), entry.getKey());
+        redisInstance.hset(indexedResult.toString(), entry.getKey(), entry.getValue().toString());
+        redisInstance.sadd(tableName + ":" + entry.getKey() + ":" + entry.getValue(), indexedResult.toString());
         if (!oldValue.isEmpty()) {
-            jedis.srem(tableName + ":" + entry.getKey() + oldValue, indexedResult.toString());
+            redisInstance.srem(tableName + ":" + entry.getKey() + oldValue, indexedResult.toString());
         }
+    }
+
+    private boolean isRecordExists(Map<String, String> attributeMap) {
+        Map<String, String> resultMap = redisInstance.hgetAll(tableName + ":" + attributeMap.get(primaryKeys.get(0)));
+        return !resultMap.isEmpty();
     }
 }
