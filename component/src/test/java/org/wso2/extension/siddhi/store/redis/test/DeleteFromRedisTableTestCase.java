@@ -23,6 +23,7 @@ import org.slf4j.LoggerFactory;
 import org.testng.Assert;
 import org.testng.annotations.AfterClass;
 import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
@@ -46,6 +47,11 @@ public class DeleteFromRedisTableTestCase {
     @AfterClass
     public static void shutdown() {
         log.info("== Redis Table DELETE tests completed ==");
+    }
+
+    @BeforeMethod
+    public void init() throws ConnectionUnavailableException {
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(description = "deleteFromRedisTableTest1")
@@ -86,7 +92,6 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
@@ -126,7 +131,6 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 1, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest1")
@@ -165,7 +169,6 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest3")
@@ -205,7 +208,6 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest4", expectedExceptions = SiddhiAppCreationException.class)
@@ -242,7 +244,6 @@ public class DeleteFromRedisTableTestCase {
         deleteStockStream.send(new Object[]{"HTC", 57.6F, 100L});
         await().atMost(5, TimeUnit.SECONDS);
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest4")
@@ -283,7 +284,6 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 0, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test(dependsOnMethods = "deleteFromRedisTableTest6")
@@ -325,6 +325,5 @@ public class DeleteFromRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Deletion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 }

@@ -49,9 +49,10 @@ public class UpdateRedisTableTestCase {
     private static final String TABLE_NAME = "fooTable";
 
     @BeforeMethod
-    public void init() {
+    public void init() throws ConnectionUnavailableException {
         inEventCount.set(0);
         removeEventCount = 0;
+        RedisTestUtils.cleanRedisDatabase();
         eventArrived = false;
     }
 
@@ -65,12 +66,8 @@ public class UpdateRedisTableTestCase {
         log.info("== Redis Table UPDATE tests completed ==");
     }
 
-    public static void cleanDB() throws ConnectionUnavailableException {
-        RedisTestUtils.cleanRedisDatabase();
-    }
-
     @Test
-    public void updateFromTableTest1() throws InterruptedException, ConnectionUnavailableException {
+    public void updateFromTableTest1() throws InterruptedException {
         //Check for update event data in Redis table when a primary key condition is true.
         log.info("updateFromTableTest 1 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -136,16 +133,16 @@ public class UpdateRedisTableTestCase {
 
         checkStockStream.send(new Object[]{"IBM", "75.6", 100L});
         checkStockStream.send(new Object[]{"WSO2", "57.6", 100L});
+
         SiddhiTestHelper.waitForEvents(1000, 2, inEventCount, 6000);
         AssertJUnit.assertEquals("Number of success events", 2, inEventCount.get());
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();
-        cleanDB();
     }
 
-    @Test
-    public void updateFromTableTest2() throws InterruptedException, ConnectionUnavailableException {
+    @Test(dependsOnMethods = "updateFromTableTest1")
+    public void updateFromTableTest2() throws InterruptedException {
         //Check for update event data in Redis table when index key are not present;
         log.info("updateFromTableTest 2 - update event data in Redis table when index key are not present. ");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -187,7 +184,7 @@ public class UpdateRedisTableTestCase {
                                 AssertJUnit.assertArrayEquals(new Object[]{"IBM", 75.6, 100L}, event.getData());
                                 break;
                             case 2:
-                                AssertJUnit.assertArrayEquals(new Object[]{"WSO2", 57.6, 200L}, event.getData());
+                                AssertJUnit.assertArrayEquals(new Object[]{"AWS", 57.6, 200L}, event.getData());
                                 break;
                             case 3:
                                 AssertJUnit.assertArrayEquals(new Object[]{"WSO2", 57.6, 100L}, event.getData());
@@ -212,12 +209,12 @@ public class UpdateRedisTableTestCase {
 
         stockStream.send(new Object[]{"WSO2", 55.6, 100L});
         stockStream.send(new Object[]{"IBM", 75.6, 100L});
-        stockStream.send(new Object[]{"WSO2", 57.6, 200L});
+        stockStream.send(new Object[]{"AWS", 57.6, 200L});
 
         updateStockStream.send(new Object[]{"WSO2", 57.6, 100L});
 
         checkStockStream.send(new Object[]{"IBM", 75.6, 100L});
-        checkStockStream.send(new Object[]{"WSO2", 57.6, 200L});
+        checkStockStream.send(new Object[]{"AWS", 57.6, 200L});
         checkStockStream.send(new Object[]{"WSO2", 57.6, 100L});
         await().atMost(5, TimeUnit.SECONDS);
 
@@ -225,11 +222,10 @@ public class UpdateRedisTableTestCase {
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();
-        cleanDB();
     }
 
     @Test(dependsOnMethods = "updateFromTableTest2", expectedExceptions = SiddhiAppCreationException.class)
-    public void updateFromTableTest3() throws InterruptedException, ConnectionUnavailableException {
+    public void updateFromTableTest3() throws InterruptedException {
         log.info("updateFromTableTest 3 - update event data in Redis table when a primary key condition is true. ");
         SiddhiManager siddhiManager = new SiddhiManager();
         String streams = "" +
@@ -302,6 +298,5 @@ public class UpdateRedisTableTestCase {
         AssertJUnit.assertEquals("Number of remove events", 0, removeEventCount);
         AssertJUnit.assertEquals("Event arrived", true, eventArrived);
         siddhiAppRuntime.shutdown();
-        cleanDB();
     }
 }

@@ -43,8 +43,9 @@ public class UpdateOrInsertRedisTableTestCase {
     private AtomicInteger count = new AtomicInteger(0);
 
     @BeforeMethod
-    public void init() {
+    public void init() throws ConnectionUnavailableException {
         count.set(0);
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @BeforeClass
@@ -90,15 +91,18 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"FB", 57.6F, 100L});
 
         updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
-
-        await().atMost(5, TimeUnit.SECONDS);
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        int count = 0;
+        while (totalRowsInTable != 8 && count < 5) {
+            Thread.sleep(1000);
+            totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+            count++;
+        }
         Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
-    @Test
+    @Test(dependsOnMethods = "updateOrInsertRedisTableTest1")
     public void updateOrInsertRedisTableTest2() throws InterruptedException, SQLException,
             ConnectionUnavailableException {
         log.info("updateOrInsertRedisTableTest 2");
@@ -131,14 +135,13 @@ public class UpdateOrInsertRedisTableTestCase {
 
         updateStockStream.send(new Object[]{"WSO2", 20.3F, 50L});
 
-        await().atMost(3, TimeUnit.SECONDS);
+        await().atMost(10, TimeUnit.SECONDS);
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
-    @Test(expectedExceptions = SiddhiAppCreationException.class)
+    @Test(dependsOnMethods = "updateOrInsertRedisTableTest2", expectedExceptions = SiddhiAppCreationException.class)
     public void updateOrInsertRedisTableTest3() throws InterruptedException, SQLException,
             ConnectionUnavailableException {
         log.info("updateOrInsertRedisTableTest 3");
@@ -175,6 +178,5 @@ public class UpdateOrInsertRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 }

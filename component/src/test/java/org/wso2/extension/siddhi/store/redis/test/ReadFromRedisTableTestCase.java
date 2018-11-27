@@ -51,14 +51,15 @@ public class ReadFromRedisTableTestCase {
     }
 
     @BeforeMethod
-    public void init() {
+    public void init() throws ConnectionUnavailableException {
         inEventCount = 0;
         removeEventCount = 0;
         eventArrived = false;
+        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
-    public void readEventRedisTableTestCase1() throws InterruptedException, ConnectionUnavailableException {
+    public void readEventRedisTableTestCase1() throws InterruptedException {
         //Read events from a Redis table successfully
         log.info("readEventRedisTableTestCase 1 - Read events using primary key");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -124,11 +125,10 @@ public class ReadFromRedisTableTestCase {
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
-    public void readEventRedisTableTestCase2() throws InterruptedException, ConnectionUnavailableException {
+    public void readEventRedisTableTestCase2() throws InterruptedException {
         //Read events from a Redis table successfully
         log.info("readEventRedisTableTestCase 2 - Read event from table using index");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -193,11 +193,10 @@ public class ReadFromRedisTableTestCase {
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
-    public void readEventRedisTableTestCase3() throws InterruptedException, ConnectionUnavailableException {
+    public void readEventRedisTableTestCase3() throws InterruptedException {
         //Read events from a Redis table successfully
         log.info("readEventRedisTableTestCase 3 - Read event from a table without primary key using index column");
         SiddhiManager siddhiManager = new SiddhiManager();
@@ -256,6 +255,5 @@ public class ReadFromRedisTableTestCase {
         Assert.assertEquals(removeEventCount, 0, "Number of remove events");
         Assert.assertEquals(eventArrived, true, "Event arrived");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 }
