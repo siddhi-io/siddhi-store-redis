@@ -292,8 +292,7 @@ public class RedisTable extends AbstractRecordTable {
     protected void updateOrAdd(CompiledCondition updateCondition,
                                List<Map<String, Object>> updateConditionParameterMaps,
                                Map<String, CompiledExpression> updateSetExpressions,
-                               List<Map<String, Object>> updateSetParameterMaps,
-                               List<Object[]> addingRecords)
+                               List<Map<String, Object>> updateSetParameterMaps, List<Object[]> addingRecords)
             throws ConnectionUnavailableException {
         try {
             updateTable(updateCondition, updateSetParameterMaps, updateConditionParameterMaps, false);
@@ -427,24 +426,24 @@ public class RedisTable extends AbstractRecordTable {
         }
     }
 
-    private void updateTable(CompiledCondition
-                                     updateCondition, List<Map<String, Object>> updateSetParameterMaps,
+    private void updateTable(CompiledCondition updateCondition, List<Map<String, Object>> updateSetParameterMaps,
                              List<Map<String, Object>> updateConditionParameterMaps, boolean updateOnly) {
+        int counter = 0;
         for (Map<String, Object> updateConditionParameter : updateConditionParameterMaps) {
             BasicCompareOperation condition = resolveCondition((RedisCompliedCondition) updateCondition,
                     updateConditionParameter);
             StoreVariable storeVariable = condition.getStoreVariable();
             StreamVariable streamVariable = condition.getStreamVariable();
             if (updateOnly && primaryKeys.contains(storeVariable.getName())) {
-                Map<String, String> exisetRecord = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
-                if (!exisetRecord.isEmpty()) {
-                    updateOnPrimaryKey(updateSetParameterMaps, condition);
+                Map<String, String> existRecord = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
+                if (!existRecord.isEmpty()) {
+                    updateOnPrimaryKey(updateSetParameterMaps.get(counter), condition);
                 } else {
                     log.warn("Record " + storeVariable.getName() + " = " + streamVariable.getName() +
                             " that trying to " + "update does not exist in table : " + tableName + ". ");
                 }
             } else if (!updateOnly && primaryKeys.contains(storeVariable.getName())) {
-                updateOnPrimaryKey(updateSetParameterMaps, condition);
+                updateOnPrimaryKey(updateSetParameterMaps.get(counter), condition);
             } else if (updateOnly && indices.contains(storeVariable.getName())) {
                 updateOrAddOnIndex(updateSetParameterMaps, condition);
             } else if (!updateOnly && indices.contains(storeVariable.getName())) {
@@ -454,14 +453,13 @@ public class RedisTable extends AbstractRecordTable {
                 }
                 updateOrAddOnIndex(updateSetParameterMaps, condition);
             }
+            counter++;
         }
     }
 
-    private void updateOnPrimaryKey(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation
-            condition) {
+    private void updateOnPrimaryKey(Map<String, Object> updateSetParameter, BasicCompareOperation condition) {
         StreamVariable streamVariable = condition.getStreamVariable();
-        for (Map<String, Object> updateSetParameters : updateSetParameterMaps) {
-            for (Map.Entry<String, Object> entry : updateSetParameters.entrySet()) {
+            for (Map.Entry<String, Object> entry : updateSetParameter.entrySet()) {
                 if (indices.contains(entry.getKey())) {
                     String existingValue = redisInstance.hget(tableName + ":" + streamVariable.getName(),
                             entry.getKey());
@@ -475,7 +473,6 @@ public class RedisTable extends AbstractRecordTable {
                 String val = entry.getValue().toString();
                 redisInstance.hset(hashKey, key, val);
             }
-        }
     }
 
     private void updateOrAddOnIndex(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation

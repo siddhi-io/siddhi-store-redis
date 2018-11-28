@@ -21,6 +21,9 @@ package org.wso2.extension.siddhi.store.redis.test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.testng.Assert;
+import org.testng.annotations.AfterClass;
+import org.testng.annotations.BeforeClass;
+import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.Test;
 import org.wso2.siddhi.core.SiddhiAppRuntime;
 import org.wso2.siddhi.core.SiddhiManager;
@@ -31,6 +34,21 @@ import org.wso2.siddhi.core.stream.input.InputHandler;
 public class DefineRedisTableTestCase {
     private static final Logger log = LoggerFactory.getLogger(DefineRedisTableTestCase.class);
     private static final String TABLE_NAME = "fooTable";
+
+    @BeforeClass
+    public static void startTest() {
+        log.info("== Define Redis Table tests started ==");
+    }
+
+    @AfterClass
+    public static void shutdown() {
+        log.info("== Define Redis Table tests completed ==");
+    }
+
+    @BeforeMethod
+    public void init() throws ConnectionUnavailableException {
+        RedisTestUtils.cleanRedisDatabase();
+    }
 
     @Test
     public void defineRedisTableTest1() throws InterruptedException, ConnectionUnavailableException {
@@ -56,7 +74,6 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -84,7 +101,6 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 4, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -110,7 +126,6 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 
     @Test
@@ -137,6 +152,5 @@ public class DefineRedisTableTestCase {
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 4, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
-        RedisTestUtils.cleanRedisDatabase();
     }
 }
