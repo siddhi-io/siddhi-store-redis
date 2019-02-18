@@ -1,4 +1,4 @@
-# API Docs - v2.0.1
+# API Docs - v2.1.0-SNAPSHOT
 
 ## Store
 
