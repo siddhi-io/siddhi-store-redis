@@ -18,7 +18,7 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
-import org.wso2.siddhi.core.util.collection.operator.CompiledCondition;
+import io.siddhi.core.util.collection.operator.CompiledCondition;
 
 /**
  * CompiledCondition class
@@ -32,10 +32,5 @@ public class RedisCompliedCondition implements CompiledCondition {
 
     public BasicCompareOperation getCompiledQuery() {
         return compiledQuery;
-    }
-
-    @Override
-    public CompiledCondition cloneCompilation(String key) {
-        return null;
     }
 }

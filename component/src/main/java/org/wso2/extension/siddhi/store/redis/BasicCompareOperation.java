@@ -18,9 +18,9 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
+import io.siddhi.query.api.expression.condition.Compare;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
-import org.wso2.siddhi.query.api.expression.condition.Compare;
 
 /**
  * Class that denotes a simple compare operation that can be undertaken by the Redis instance. This contains a couple

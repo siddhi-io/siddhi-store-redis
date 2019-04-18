@@ -18,7 +18,7 @@
 
 package org.wso2.extension.siddhi.store.redis.exceptions;
 
-import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
+import io.siddhi.core.exception.SiddhiAppRuntimeException;
 
 /**
  * Class for representing a custom exception that could be thrown by the Redis store. This is an unchecked exception.
