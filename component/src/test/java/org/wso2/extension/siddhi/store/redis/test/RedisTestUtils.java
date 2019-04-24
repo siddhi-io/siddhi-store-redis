@@ -19,7 +19,7 @@
 package org.wso2.extension.siddhi.store.redis.test;
 
 
-import org.wso2.siddhi.core.exception.ConnectionUnavailableException;
+import io.siddhi.core.exception.ConnectionUnavailableException;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;

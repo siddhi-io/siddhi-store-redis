@@ -18,12 +18,12 @@
 
 package org.wso2.extension.siddhi.store.redis;
 
+import io.siddhi.core.table.record.RecordIterator;
+import io.siddhi.query.api.definition.Attribute;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
-import org.wso2.siddhi.core.table.record.RecordIterator;
-import org.wso2.siddhi.query.api.definition.Attribute;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
