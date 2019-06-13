@@ -51,4 +51,6 @@ public interface RedisInstance {
     List<String> scan(List<HostAndPort> nodes, ScanParams scanParams);
 
     String type(String key);
+    
+    public Long expire(String key, int ttl);
 }

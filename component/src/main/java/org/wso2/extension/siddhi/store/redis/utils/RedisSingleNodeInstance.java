@@ -91,4 +91,8 @@ public class RedisSingleNodeInstance implements RedisInstance {
     public String type(String key) {
         return jedis.type(key);
     }
+    
+    public Long expire(String key, int ttl) {
+      return jedis.expire(key, ttl);
+    }
 }

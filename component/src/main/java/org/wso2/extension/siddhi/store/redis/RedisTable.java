@@ -98,6 +98,10 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                                 "example \"nodes = 'localhost:30001,localhost:30002'\".",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "localhost:6379@root"),
+                @Parameter(name = "ttl",
+                        description = "Time to live for each record",
+                        type = {DataType.LONG}, optional = true,
+                        defaultValue = "-1"),
         },
         examples = {
                 @Example(
@@ -136,7 +140,8 @@ public class RedisTable extends AbstractRecordTable {
     private Boolean clusterModeEnabled = false;
     private List<HostAndPort> hostAndPortList = Arrays.asList(new HostAndPort(host, port));
     private RedisInstance redisInstance;
-
+    private Integer ttl = -1;
+    
     @Override
     protected void init(TableDefinition tableDefinition, ConfigReader configReader) {
         this.attributes = tableDefinition.getAttributeList();
@@ -203,6 +208,13 @@ public class RedisTable extends AbstractRecordTable {
         } else {
             tableName = tableDefinition.getId();
         }
+        
+        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL) != null) {
+            ttl = Integer.parseInt(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL));
+        } else {
+            ttl = -1;
+        }
+
     }
 
     @Override
