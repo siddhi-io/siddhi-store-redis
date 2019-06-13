@@ -161,7 +161,7 @@ public class DefineRedisTableTestCase {
         String streams = "" +
                 "define stream StockStream (name string, amount double);" +
                 "@store(type='redis', host='localhost', " +
-                "port='6379', table.name='fooTable', password= 'root', ttl='6000')" +
+                "port='6379', table.name='fooTable', password= 'root', ttl='3')" +
                 "@PrimaryKey('name')" +
                 "define table fooTable(name string, amount double); ";
         String query = "" +
@@ -176,12 +176,12 @@ public class DefineRedisTableTestCase {
         stockStream.send(new Object[]{"IBM", 1001});
 
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
-        Thread.sleep(6002);
+        Thread.sleep(5000);
         int totalRowsInTable2 = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         
         Assert.assertEquals(totalRowsInTable, 2, "Definition/Insertion failed");
         Assert.assertEquals(totalRowsInTable2, 0, "Definition/ttl failed");
-        System.out.print("Success");
+        log.info("TTL Test Success");
         siddhiAppRuntime.shutdown();
     }
 

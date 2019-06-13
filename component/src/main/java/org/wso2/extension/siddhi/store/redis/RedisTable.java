@@ -99,7 +99,7 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "localhost:6379@root"),
                 @Parameter(name = "ttl",
-                        description = "Time to live for each record",
+                        description = "Time to live in seconds for each record",
                         type = {DataType.LONG}, optional = true,
                         defaultValue = "-1"),
         },
@@ -239,6 +239,9 @@ public class RedisTable extends AbstractRecordTable {
                     String id = generateRecordID();
                     keyGenBuilder.append(":").append(id);
                     redisInstance.hmset(keyGenBuilder.toString(), attributeMap);
+                    if (-1 != ttl) {
+                        redisInstance.expire(keyGenBuilder.toString(), ttl);
+                    }
                     if (indices != null && !indices.isEmpty()) {
                         //create a set for each indexed column
                         createIndexTable(attributeMap, keyGenBuilder);
@@ -385,6 +388,10 @@ public class RedisTable extends AbstractRecordTable {
         keyGenBuilder.append(":").append(attributeMap.get(primaryKeys.get(0)));
         //create hashes for each record
         redisInstance.hmset(keyGenBuilder.toString(), attributeMap);
+        if (-1 != ttl) {
+            redisInstance.expire(keyGenBuilder.toString(), ttl);
+        }
+
         if (indices != null && !indices.isEmpty()) {
             //create a set for each indexed column
             createIndexTable(attributeMap, keyGenBuilder);

@@ -49,7 +49,7 @@
     </tr>
     <tr>
         <td style="vertical-align: top">ttl</td>
-        <td style="vertical-align: top; word-wrap: break-word">Time to live for each record</td>
+        <td style="vertical-align: top; word-wrap: break-word">Time to live in seconds for each record</td>
         <td style="vertical-align: top">-1</td>
         <td style="vertical-align: top">LONG</td>
         <td style="vertical-align: top">Yes</td>
