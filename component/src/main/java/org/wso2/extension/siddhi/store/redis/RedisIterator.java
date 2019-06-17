@@ -24,10 +24,10 @@ import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
 import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
+import org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.ScanParams;
 import redis.clients.jedis.ScanResult;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -41,7 +41,7 @@ import java.util.Map;
  **/
 public class RedisIterator implements RecordIterator<Object[]> {
     private RedisInstance redisInstance;
-    private Map<String, String> resultMap = new HashMap<>();
+    private Map<String, String>  resultMap = new HashMap<>();
     private ScanResult scanResults;
     private List<String> allResults;
     private List<Attribute> attributes;
@@ -60,10 +60,12 @@ public class RedisIterator implements RecordIterator<Object[]> {
     private Long stringCursor = RedisTableConstants.REDIS_DEFAULT_CURSOR;
     private Iterator<Object[]> iterator;
     private List<HostAndPort> hostAndPorts;
+    private int ttl;
+    private boolean ttlOnRead;
 
     public RedisIterator(RedisInstance redisInstance, List<Attribute> attributes, BasicCompareOperation query,
                          String tableName, List<String> primaryKeys, List<String> indexes,
-                         List<HostAndPort> hostAndPorts) {
+                         List<HostAndPort> hostAndPorts, int ttl, boolean ttlOnRead) {
         this.redisInstance = redisInstance;
         this.attributes = attributes;
         this.tableName = tableName;
@@ -72,6 +74,8 @@ public class RedisIterator implements RecordIterator<Object[]> {
         this.primaryKeys = primaryKeys;
         this.indexes = indexes;
         this.hostAndPorts = hostAndPorts;
+        this.ttl = ttl;
+        this.ttlOnRead = ttlOnRead;
     }
 
     @Override
@@ -162,11 +166,15 @@ public class RedisIterator implements RecordIterator<Object[]> {
     private List<Object[]> fetchResultsByPrimaryKey() {
         List<Object[]> resultList = new ArrayList<>();
         if (isInitialTraverse) {
+            String rowKey = tableName + ":" + streamVariable.getName();
             resultMap = redisInstance.hgetAll(tableName + ":" + streamVariable.getName());
             if (resultMap != null && !resultMap.isEmpty()) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
                 isInitialTraverse = false;
+                if (ttlOnRead) {
+                  RedisTableUtils.setExpire(redisInstance, tableName, indexes, rowKey, ttl, resultMap);
+                }
             }
         }
         return resultList;
@@ -196,6 +204,9 @@ public class RedisIterator implements RecordIterator<Object[]> {
             if (resultMap != null) {
                 result = resultsGenerator(resultMap);
                 resultList.add(result);
+                if (ttlOnRead) {
+                  RedisTableUtils.setExpire(redisInstance, tableName, indexes, scanResult.toString(), ttl, resultMap);
+                }
             }
         });
         return resultList;
@@ -224,6 +235,9 @@ public class RedisIterator implements RecordIterator<Object[]> {
                 if (resultMap != null) {
                     result = resultsGenerator(resultMap);
                     resultList.add(result);
+                    if (ttlOnRead) {
+                        RedisTableUtils.setExpire(redisInstance, tableName, indexes, e.toString(), ttl, resultMap);
+                    }
                 }
             }
         });

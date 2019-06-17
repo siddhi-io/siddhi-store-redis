@@ -157,4 +157,33 @@ public class InsertIntoRedisTableTestCase {
         Assert.assertEquals(totalRowsInTable, 6, "Definition/Insertion failed");
         siddhiAppRuntime.shutdown();
     }
+
+    @Test
+    public void insertIntoRedisTableTest5() throws InterruptedException, ConnectionUnavailableException {
+        log.info("insertIntoRedisTableTest 5 - insert data into a redis table with ttl and without a primary key");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String streams = "" +
+            "define stream StockStream (name string, amount double);" +
+            "@store(type='redis', host='localhost', ttl.seconds='3', " +
+            "port='6379', table.name='fooTable', password= 'root')" +
+            "define table fooTable(name string, amount double); ";
+        String query = "" +
+            "@info(name = 'query1') " +
+            "from StockStream " +
+            "insert into fooTable; ";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 100.0});
+        stockStream.send(new Object[]{"IBM", 1001});
+        stockStream.send(new Object[]{"MSFT", 1001.0});
+
+        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Thread.sleep(5000);
+        int totalRowsInTablePostTtl = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 3, "Definition/Insertion failed");
+        Assert.assertEquals(totalRowsInTablePostTtl, 0, "TTL failure");
+        siddhiAppRuntime.shutdown();
+    }
 }
