@@ -215,10 +215,10 @@ public class UpdateOrInsertRedisTableTestCase {
         stockStream.send(new Object[]{"FB", 57.6F, 100L});
         Thread.sleep(1000);
         updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
-        Thread.sleep(1000);
+        Thread.sleep(2000);
         int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
-        Thread.sleep(4000);
+        Thread.sleep(3000);
         totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
         Assert.assertEquals(totalRowsInTable, 2, "ttl failed");
         
