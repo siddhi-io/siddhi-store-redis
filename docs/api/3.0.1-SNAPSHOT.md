@@ -8,7 +8,7 @@
 
 <span id="syntax" class="md-typeset" style="display: block; font-weight: bold;">Syntax</span>
 ```
-@Store(type="redis", table.name="<STRING>", cluster.mode="<BOOL>", nodes="<STRING>", ttl="<LONG>")
+@Store(type="redis", table.name="<STRING>", cluster.mode="<BOOL>", nodes="<STRING>", ttl.seconds="<LONG>", ttl.on.update="<BOOL>", ttl.on.read="<BOOL>")
 @PrimaryKey("PRIMARY_KEY")
 @Index("INDEX")
 ```
@@ -48,10 +48,26 @@
         <td style="vertical-align: top">No</td>
     </tr>
     <tr>
-        <td style="vertical-align: top">ttl</td>
+        <td style="vertical-align: top">ttl.seconds</td>
         <td style="vertical-align: top; word-wrap: break-word">Time to live in seconds for each record</td>
         <td style="vertical-align: top">-1</td>
         <td style="vertical-align: top">LONG</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">ttl.on.update</td>
+        <td style="vertical-align: top; word-wrap: break-word">Set ttl on row update</td>
+        <td style="vertical-align: top">false</td>
+        <td style="vertical-align: top">BOOL</td>
+        <td style="vertical-align: top">Yes</td>
+        <td style="vertical-align: top">No</td>
+    </tr>
+    <tr>
+        <td style="vertical-align: top">ttl.on.read</td>
+        <td style="vertical-align: top; word-wrap: break-word">Set ttl on read rows</td>
+        <td style="vertical-align: top">false</td>
+        <td style="vertical-align: top">BOOL</td>
         <td style="vertical-align: top">Yes</td>
         <td style="vertical-align: top">No</td>
     </tr>
@@ -72,4 +88,10 @@
 define table SweetProductionTable (symbol string, price float, volume long);
 ```
 <p style="word-wrap: break-word">Above example demonstrate how to use the redis extension to connect in to redis cluster. Please note that, as nodes all the master node's host and port should be provided in order to work correctly. In clustered node password will not besupported</p>
+
+<span id="example-3" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 3</span>
+```
+@store(type='redis',nodes='localhost:6379@root',table.name='fooTable', ttl.seconds='30', ttl.onUpdate='true', ttl.onRead='true')define table fooTable(time long, date String)
+```
+<p style="word-wrap: break-word">Above example will create a redis table with the name fooTable and work on asingle redis node.  All rows inserted, updated or read will have its ttl set to 30 seconds</p>
 
