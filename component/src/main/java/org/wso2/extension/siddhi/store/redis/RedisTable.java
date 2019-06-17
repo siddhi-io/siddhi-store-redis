@@ -41,6 +41,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
+import org.wso2.extension.siddhi.store.redis.exceptions.IllegalTtlArgumentException;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
 import org.wso2.extension.siddhi.store.redis.utils.RedisClusterInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
@@ -162,7 +163,7 @@ public class RedisTable extends AbstractRecordTable {
     private boolean ttlOnUpdate = false;
     private boolean ttlOnRead = false;
 
-  @Override
+    @Override
     protected void init(TableDefinition tableDefinition, ConfigReader configReader) {
         this.attributes = tableDefinition.getAttributeList();
         // retrieve annotations
@@ -231,18 +232,21 @@ public class RedisTable extends AbstractRecordTable {
         
         if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_SECS) != null) {
             ttl = Integer.parseInt(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_SECS));
+            if (1 > ttl) {
+              throw new IllegalTtlArgumentException("ttl must be greater than 1");
+            }
         } else {
             ttl = -1;
         }
 
-        if (ttl > -1 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_UPDATE) != null) {
+        if (ttl > 0 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_UPDATE) != null) {
           ttlOnUpdate = Boolean.parseBoolean(storeAnnotation.getElement(
               RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_UPDATE));
         } else {
           ttlOnUpdate = false;
         }
 
-        if (ttl > -1 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_READ) != null) {
+        if (ttl > 0 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_READ) != null) {
           ttlOnRead = Boolean.parseBoolean(storeAnnotation.getElement(
               RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_READ));
         } else {
@@ -284,7 +288,7 @@ public class RedisTable extends AbstractRecordTable {
                             log.debug("There are no indexed columns defined in table " + tableName);
                         }
                     }
-                    if (-1 != ttl) {
+                    if (0 < ttl) {
                         RedisTableUtils.setExpire(redisInstance, tableName, indices, 
                                                   keyGenBuilder.toString(), ttl, attributeMap);
                     }
