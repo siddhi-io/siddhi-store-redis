@@ -254,7 +254,7 @@ public class RedisTable extends AbstractRecordTable {
         }
 
         if (log.isDebugEnabled()) {
-            log.info("ttl " + ttl + " update " + ttlOnUpdate + " read " + ttlOnRead);        
+            log.debug("ttl " + ttl + " update " + ttlOnUpdate + " read " + ttlOnRead);        
         }
   }
 

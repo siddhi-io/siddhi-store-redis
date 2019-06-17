@@ -41,7 +41,7 @@ import java.util.Map;
  **/
 public class RedisIterator implements RecordIterator<Object[]> {
     private RedisInstance redisInstance;
-    private Map<String, String>  resultMap = new HashMap<>();
+    private Map<String, String> resultMap = new HashMap<>();
     private ScanResult scanResults;
     private List<String> allResults;
     private List<Attribute> attributes;

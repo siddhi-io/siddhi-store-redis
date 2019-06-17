@@ -59,10 +59,10 @@ public class RedisTableUtils {
     
     public static void setExpire(RedisInstance redisInstance, String tableName, 
       List<String> indices, String key, int ttl, Map<String, String> rowMap) {
-        String caller =  null;
+        String caller = null;
         if (log.isDebugEnabled()) {
           caller = Thread.currentThread().getStackTrace()[2].getMethodName();
-          log.info("TTL called by " + caller + " set on " + key + " for " + ttl);
+          log.debug("TTL called by " + caller + " set on " + key + " for " + ttl);
         }
         redisInstance.expire(key, ttl);
         if (!indices.isEmpty()) {
@@ -77,7 +77,7 @@ public class RedisTableUtils {
                 }
                 if (!ok) {
                     if (log.isDebugEnabled()) {
-                        log.info("TTL called by " + caller + " had to read row");
+                        log.debug("TTL called by " + caller + " had to read row");
                     }
                     rowMap = redisInstance.hgetAll(key);
                 }
@@ -91,7 +91,7 @@ public class RedisTableUtils {
                 String indexKey = tableName + ":" + index + ":" + val;
                 redisInstance.expire(indexKey, ttl);
                 if (log.isDebugEnabled()) {
-                    log.info("TTL called by " + caller + " set on " + 
+                    log.debug("TTL called by " + caller + " set on " + 
                              indexKey + " for " + ttl);
                 }
             }
