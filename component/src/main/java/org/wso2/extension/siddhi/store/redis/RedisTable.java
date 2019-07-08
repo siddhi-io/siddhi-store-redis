@@ -41,11 +41,13 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.wso2.extension.siddhi.store.redis.beans.StoreVariable;
 import org.wso2.extension.siddhi.store.redis.beans.StreamVariable;
+import org.wso2.extension.siddhi.store.redis.exceptions.IllegalTtlArgumentException;
 import org.wso2.extension.siddhi.store.redis.exceptions.RedisTableException;
 import org.wso2.extension.siddhi.store.redis.utils.RedisClusterInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisSingleNodeInstance;
 import org.wso2.extension.siddhi.store.redis.utils.RedisTableConstants;
+import org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils;
 import redis.clients.jedis.HostAndPort;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisCluster;
@@ -55,18 +57,19 @@ import redis.clients.jedis.ScanResult;
 import redis.clients.jedis.exceptions.JedisConnectionException;
 import redis.clients.jedis.exceptions.JedisDataException;
 import redis.clients.jedis.exceptions.JedisException;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.generateRecordID;
 import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolveCondition;
+
+
 
 /**
  * This class contains the Event table implementation for Redis
@@ -98,6 +101,18 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                                 "example \"nodes = 'localhost:30001,localhost:30002'\".",
                         type = {DataType.STRING}, optional = true,
                         defaultValue = "localhost:6379@root"),
+                @Parameter(name = "ttl.seconds",
+                        description = "Time to live in seconds for each record",
+                        type = {DataType.LONG}, optional = true,
+                        defaultValue = "-1"),
+                @Parameter(name = "ttl.on.update",
+                        description = "Set ttl on row update",
+                        type = {DataType.BOOL}, optional = true,
+                        defaultValue = "false"),
+                @Parameter(name = "ttl.on.read",
+                        description = "Set ttl on read rows",
+                        type = {DataType.BOOL}, optional = true,
+                        defaultValue = "false"),
         },
         examples = {
                 @Example(
@@ -117,6 +132,14 @@ import static org.wso2.extension.siddhi.store.redis.utils.RedisTableUtils.resolv
                                 "redis cluster. Please note that, as nodes all the master node's host and port should" +
                                 " be provided in order to work correctly. In clustered node password will not be" +
                                 "supported"
+                ),
+                @Example(
+                        syntax = "@store(type='redis',nodes='localhost:6379@root',table.name='fooTable'," +
+                                " ttl.seconds='30', ttl.onUpdate='true', ttl.onRead='true')" +
+                                "define table fooTable(time long, date String)",
+                        description = "Above example will create a redis table with the name fooTable and work on a" +
+                                "single redis node.  All rows inserted, updated or read will have its ttl " +
+                                "set to 30 seconds"
                 )
         }
 )
@@ -136,6 +159,9 @@ public class RedisTable extends AbstractRecordTable {
     private Boolean clusterModeEnabled = false;
     private List<HostAndPort> hostAndPortList = Arrays.asList(new HostAndPort(host, port));
     private RedisInstance redisInstance;
+    private int ttl = -1;
+    private boolean ttlOnUpdate = false;
+    private boolean ttlOnRead = false;
 
     @Override
     protected void init(TableDefinition tableDefinition, ConfigReader configReader) {
@@ -203,7 +229,34 @@ public class RedisTable extends AbstractRecordTable {
         } else {
             tableName = tableDefinition.getId();
         }
-    }
+        
+        if (storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_SECS) != null) {
+            ttl = Integer.parseInt(storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_SECS));
+            if (1 > ttl) {
+              throw new IllegalTtlArgumentException("ttl must be greater than 1");
+            }
+        } else {
+            ttl = -1;
+        }
+
+        if (ttl > 0 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_UPDATE) != null) {
+          ttlOnUpdate = Boolean.parseBoolean(storeAnnotation.getElement(
+              RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_UPDATE));
+        } else {
+          ttlOnUpdate = false;
+        }
+
+        if (ttl > 0 && storeAnnotation.getElement(RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_READ) != null) {
+          ttlOnRead = Boolean.parseBoolean(storeAnnotation.getElement(
+              RedisTableConstants.ANNOTATION_ELEMENT_TTL_ON_READ));
+        } else {
+          ttlOnRead = false;
+        }
+
+        if (log.isDebugEnabled()) {
+            log.debug("ttl " + ttl + " update " + ttlOnUpdate + " read " + ttlOnRead);        
+        }
+  }
 
     @Override
     protected void add(List<Object[]> records) {
@@ -235,6 +288,11 @@ public class RedisTable extends AbstractRecordTable {
                             log.debug("There are no indexed columns defined in table " + tableName);
                         }
                     }
+                    if (0 < ttl) {
+                        RedisTableUtils.setExpire(redisInstance, tableName, indices, 
+                                                  keyGenBuilder.toString(), ttl, attributeMap);
+                    }
+
                 }
             });
         } catch (JedisException e) {
@@ -250,7 +308,7 @@ public class RedisTable extends AbstractRecordTable {
             BasicCompareOperation condition = resolveCondition((RedisCompliedCondition) compiledCondition,
                     findConditionParameterMap);
             return new RedisIterator(redisInstance, attributes, condition, tableName, primaryKeys, indices,
-                    hostAndPortList);
+                    hostAndPortList, ttl, ttlOnRead);
         } catch (JedisDataException e) {
             throw new RedisTableException("Error while searching the records in Redis Event Table : " + tableName, e);
         }
@@ -365,7 +423,8 @@ public class RedisTable extends AbstractRecordTable {
 
     private void createIndexTable(Map<String, String> attributeMap, StringBuilder builder) {
         for (String index : indices) {
-            redisInstance.sadd(tableName + ":" + index + ":" + attributeMap.get(index), builder.toString());
+            String key = tableName + ":" + index + ":" + attributeMap.get(index);
+            redisInstance.sadd(key, builder.toString());
         }
     }
 
@@ -380,6 +439,9 @@ public class RedisTable extends AbstractRecordTable {
             if (log.isDebugEnabled()) {
                 log.debug("There are no indexed columns defined in table " + tableName);
             }
+        }
+        if (-1 != ttl) {
+            RedisTableUtils.setExpire(redisInstance, tableName, indices, keyGenBuilder.toString(), ttl, attributeMap);
         }
     }
 
@@ -459,20 +521,29 @@ public class RedisTable extends AbstractRecordTable {
 
     private void updateOnPrimaryKey(Map<String, Object> updateSetParameter, BasicCompareOperation condition) {
         StreamVariable streamVariable = condition.getStreamVariable();
-            for (Map.Entry<String, Object> entry : updateSetParameter.entrySet()) {
-                if (indices.contains(entry.getKey())) {
-                    String existingValue = redisInstance.hget(tableName + ":" + streamVariable.getName(),
-                            entry.getKey());
-                    redisInstance.srem(tableName + ":" + entry.getKey() + ":" + existingValue,
-                            tableName + ":" + streamVariable.getName());
-                    redisInstance.sadd(tableName + ":" + entry.getKey() + ":" + entry.getValue(),
-                            tableName + ":" + streamVariable.getName());
-                }
-                String hashKey = tableName + ":" + streamVariable.getName();
-                String key = entry.getKey();
-                String val = entry.getValue().toString();
-                redisInstance.hset(hashKey, key, val);
+        String hashKey = tableName + ":" + streamVariable.getName();
+
+        for (Map.Entry<String, Object> entry : updateSetParameter.entrySet()) {
+            if (indices.contains(entry.getKey())) {
+                String existingValue = redisInstance.hget(hashKey, entry.getKey());
+                String indexKey = tableName + ":" + entry.getKey() + ":";
+                redisInstance.srem(indexKey + existingValue,
+                        tableName + ":" + streamVariable.getName());
+                redisInstance.sadd(indexKey + entry.getValue(),
+                        tableName + ":" + streamVariable.getName());
             }
+            String key = entry.getKey();
+            String val = entry.getValue().toString();
+            redisInstance.hset(hashKey, key, val);
+        }
+
+        if (ttlOnUpdate) {
+            LinkedHashMap<String, String> rowVals = new LinkedHashMap();
+            for (java.util.Map.Entry<String, Object> entry : updateSetParameter.entrySet()) {
+                rowVals.put(entry.getKey(), "" + entry.getValue());
+            }
+            RedisTableUtils.setExpire(redisInstance, tableName, indices, hashKey, ttl, rowVals);
+        }
     }
 
     private void updateOrAddOnIndex(List<Map<String, Object>> updateSetParameterMaps, BasicCompareOperation
@@ -522,7 +593,11 @@ public class RedisTable extends AbstractRecordTable {
     }
 
     private boolean isRecordExists(Map<String, String> attributeMap) {
-        Map<String, String> resultMap = redisInstance.hgetAll(tableName + ":" + attributeMap.get(primaryKeys.get(0)));
+        String rowKey = tableName + ":" + attributeMap.get(primaryKeys.get(0));
+        Map<String, String> resultMap = redisInstance.hgetAll(rowKey);
+        if (-1 != ttl && ttlOnRead && !resultMap.isEmpty()) {
+             RedisTableUtils.setExpire(redisInstance, tableName, indices, rowKey, ttl, resultMap);
+        }
         return !resultMap.isEmpty();
     }
 }

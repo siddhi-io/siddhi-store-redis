@@ -179,4 +179,49 @@ public class UpdateOrInsertRedisTableTestCase {
         Assert.assertEquals(totalRowsInTable, 5, "UpdateOrInsert failed");
         siddhiAppRuntime.shutdown();
     }
+    
+    @Test
+    public void updateOrInsertRedisTableTest4() throws InterruptedException, SQLException,
+            ConnectionUnavailableException {
+        log.info("updateOrInsertRedisTableTest 4 - Update table on ");
+        SiddhiManager siddhiManager = new SiddhiManager();
+        String streams = "" +
+                "define stream StockStream (symbol string, price float, volume long); " +
+                "define stream UpdateStockStream (symbol string, price float, volume long); " +
+                "define stream CheckStockStream (symbol string, price float, volume long); " +
+                "@Store(type='redis', table.name='" + TABLE_NAME + "', " +
+                "host= 'localhost',port='6379',password='root', " +
+                "ttl.seconds='5', ttl.on.update='true')" +
+                "@PrimaryKey('symbol')" +
+                "@index('price')" +
+                "define table StockTable (symbol string, price float, volume long); ";
+        String query = "" +
+                "@info(name = 'query1') " +
+                "from StockStream " +
+                "insert into StockTable ;" +
+                "\n" +
+                "@info(name = 'query2') " +
+                "from UpdateStockStream#window.timeBatch(1 sec) " +
+                "update or insert into StockTable " +
+                "on StockTable.symbol=='GOOG';";
+        SiddhiAppRuntime siddhiAppRuntime = siddhiManager.createSiddhiAppRuntime(streams + query);
+        InputHandler stockStream = siddhiAppRuntime.getInputHandler("StockStream");
+        InputHandler updateStockStream = siddhiAppRuntime.getInputHandler("UpdateStockStream");
+        InputHandler checkStockStream = siddhiAppRuntime.getInputHandler("CheckStockStream");
+        siddhiAppRuntime.start();
+
+        stockStream.send(new Object[]{"WSO2", 55.6F, 100L});
+        stockStream.send(new Object[]{"IBM", 75.6F, 100L});
+        stockStream.send(new Object[]{"FB", 57.6F, 100L});
+        Thread.sleep(1000);
+        updateStockStream.send(new Object[]{"GOOG", 10.6F, 100L});
+        Thread.sleep(2000);
+        int totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 8, "UpdateOrInsert failed");
+        Thread.sleep(3000);
+        totalRowsInTable = RedisTestUtils.getRowsFromTable(TABLE_NAME);
+        Assert.assertEquals(totalRowsInTable, 2, "ttl failed");
+        
+        siddhiAppRuntime.shutdown();
+    }
 }

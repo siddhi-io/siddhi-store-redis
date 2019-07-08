@@ -104,4 +104,8 @@ public class RedisClusterInstance implements RedisInstance {
     public String type(String key) {
         return jedisCluster.type(key);
     }
+    
+    public Long expire(String key, int ttl) {
+      return jedisCluster.expire(key, ttl);
+    }
 }

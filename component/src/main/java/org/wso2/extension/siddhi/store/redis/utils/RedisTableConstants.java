@@ -32,10 +32,11 @@ public class RedisTableConstants {
     public static final String ANNOTATION_ELEMENT_TABLE_NAME = "table.name";
     public static final String ANNOTATION_ELEMENT_CLUSTER_MODE = "cluster.mode";
     public static final String ANNOTATION_ELEMENT_NODES = "nodes";
-
+    public static final String ANNOTATION_ELEMENT_TTL_SECS = "ttl.seconds";
+    public static final String ANNOTATION_ELEMENT_TTL_ON_UPDATE = "ttl.on.update";
+    public static final String ANNOTATION_ELEMENT_TTL_ON_READ = "ttl.on.read";
     public static final String DEFAULT_HOST = "localhost";
     public static final int DEFAULT_PORT = 6379;
     public static final int REDIS_BATCH_SIZE = 1000;
     public static final Long REDIS_DEFAULT_CURSOR = 0L;
-
 }

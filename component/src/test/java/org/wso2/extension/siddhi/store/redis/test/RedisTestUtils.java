@@ -60,4 +60,14 @@ public class RedisTestUtils {
         }
         jedis.flushAll();
     }
+
+    public static Long getTTL(String key) throws ConnectionUnavailableException {
+        if (jedis == null) {
+            createConnectionPool();
+        }
+
+        Long ttl;
+        ttl = jedis.ttl(key);
+        return ttl;
+    }
 }

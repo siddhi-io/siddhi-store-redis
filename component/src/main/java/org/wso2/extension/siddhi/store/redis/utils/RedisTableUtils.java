@@ -18,11 +18,13 @@
 
 package org.wso2.extension.siddhi.store.redis.utils;
 
+import org.apache.log4j.Logger;
 import org.wso2.extension.siddhi.store.redis.BasicCompareOperation;
 import org.wso2.extension.siddhi.store.redis.RedisCompliedCondition;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -35,6 +37,7 @@ public class RedisTableUtils {
     }
 
     private static ThreadLocal<SecureRandom> secureRandom = ThreadLocal.withInitial(SecureRandom::new);
+    private static Logger log = Logger.getLogger(RedisTableUtils.class);
 
     //this method will be used to generate an id to add when there is no primary key is defined.
     public static String generateRecordID() {
@@ -52,5 +55,46 @@ public class RedisTableUtils {
             (condition.getStreamVariable()).setName(value);
         }
         return condition;
+    }
+    
+    public static void setExpire(RedisInstance redisInstance, String tableName, 
+      List<String> indices, String key, int ttl, Map<String, String> rowMap) {
+        String caller = null;
+        if (log.isDebugEnabled()) {
+          caller = Thread.currentThread().getStackTrace()[2].getMethodName();
+          log.debug("TTL called by " + caller + " set on " + key + " for " + ttl);
+        }
+        redisInstance.expire(key, ttl);
+        if (!indices.isEmpty()) {
+            if (null != rowMap && !rowMap.isEmpty()) {
+                // check if we have all needed values
+                boolean ok = true;
+                for (String index : indices) {
+                    if (!rowMap.containsKey(index)) {
+                        ok = false;
+                        break;
+                    }
+                }
+                if (!ok) {
+                    if (log.isDebugEnabled()) {
+                        log.debug("TTL called by " + caller + " had to read row");
+                    }
+                    rowMap = redisInstance.hgetAll(key);
+                }
+            }
+
+            for (String index : indices) {
+                String val = rowMap.get(index);
+                if (null == val) {
+                  continue;
+                }
+                String indexKey = tableName + ":" + index + ":" + val;
+                redisInstance.expire(indexKey, ttl);
+                if (log.isDebugEnabled()) {
+                    log.debug("TTL called by " + caller + " set on " + 
+                             indexKey + " for " + ttl);
+                }
+            }
+        }
     }
 }
