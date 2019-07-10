@@ -7,13 +7,13 @@ redis cloud instance of version 4.x.x.
 
 Find some useful links below:
 
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis">Source code</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/releases">Releases</a>
-* <a target="_blank" href="https://github.com/wso2-extensions/siddhi-store-redis/issues">Issue tracker</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-store-redis">Source code</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-store-redis/releases">Releases</a>
+* <a target="_blank" href="https://github.com/siddhi-io/siddhi-store-redis/issues">Issue tracker</a>
 
 ## Latest API Docs 
 
-Latest API Docs is <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/3.1.0">3.1.0</a>.
+Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-store-redis/api/3.1.0">3.1.0</a>.
 
 ## Prerequisites
  
@@ -27,7 +27,7 @@ Redis Server instance should be started and ready to connect via redis java API.
 * This extension can be used to connect into Redis cluster or a single redis node(Tested on Redis 5.0).
 * This extension is shipped by default with WSO2 Stream Processor, if you wish to use an alternative version of this 
 extension you can replace the component <a target="_blank" href="https://github
-.com/wso2-extensions/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` 
+.com/siddhi-io/siddhi-store-redis/releases">jar</a> that can be found in the `<STREAM_PROCESSOR_HOME>/lib` 
 directory.
 * This extension depends on Jedis, redis client. Please download redis client jar (2.9.0) and place in `<STREAM_PROCESSOR_HOME>/lib` directory.
 
@@ -37,7 +37,7 @@ directory.
 
 ```
      <dependency>
-        <groupId>org.wso2.extension.siddhi.store.redis</groupId>
+        <groupId>io.siddhi.extension.store.redis</groupId>
         <artifactId>siddhi-store-redis</artifactId>
         <version>x.x.x</version>
      </dependency>
@@ -55,16 +55,16 @@ directory.
 
 ## Features
 
-* <a target="_blank" href="https://wso2-extensions.github.io/siddhi-store-redis/api/3.1.0/#redis-store">redis</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#store">(Store)</a>*<br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource. This extension only can be used to read the data which persisted using the same extension since unique implementation has been used to map the relational data in to redis's key and value representation</p></div>
+* <a target="_blank" href="https://siddhi-io.github.io/siddhi-store-redis/api/3.1.0/#redis-store">redis</a> *<a target="_blank" href="http://siddhi.io/documentation/siddhi-5.x/query-guide-5.x/#store">(Store)</a>*<br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource. This extension only can be used to read the data which persisted using the same extension since unique implementation has been used to map the relational data in to redis's key and value representation</p></div>
 
 ## How to Contribute
  
   * Please report issues at <a target="_blank" href="https://github
-  .com/wso2-extensions/siddhi-store-redis/issues">GitHub
+  .com/siddhi-io/siddhi-store-redis/issues">GitHub
    Issue Tracker</a>.
   
   * Send your contributions as pull requests to <a target="_blank" href="https://github
-  .com/wso2-extensions/siddhi-store-redis/tree/master">master branch</a>. 
+  .com/siddhi-io/siddhi-store-redis/tree/master">master branch</a>. 
  
 ## Contact us 
 
