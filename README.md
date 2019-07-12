@@ -8,7 +8,7 @@ Siddhi Store Redis
   [![GitHub Last Commit](https://img.shields.io/github/last-commit/siddhi-io/siddhi-store-redis.svg)](https://github.com/siddhi-io/siddhi-store-redis/commits/master)
   [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 
-The **siddhi-store-redis extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that persist and retrieve to persist events to redis cloud instance of version 4.x.x.
+The **siddhi-store-redis extension** is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that persist and retrieve events to/from Redis.
 
 For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. 
 
@@ -28,6 +28,7 @@ Latest API Docs is <a target="_blank" href="https://siddhi-io.github.io/siddhi-s
 ## Dependencies 
 
 This extension depends on Jedis, redis client. Please download redis client jar (2.9.0) use it.
+Tested/supported with Redis cloud instance version 4.x.x .
 
 ## Installation
 
