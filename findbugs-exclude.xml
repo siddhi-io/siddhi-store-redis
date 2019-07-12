@@ -19,7 +19,7 @@
 
 <FindBugsFilter>
     <Match>
-        <Class name="org.wso2.extension.siddhi.store.redis.RedisIterator"/>
+        <Class name="io.siddhi.extension.store.redis.RedisIterator"/>
         <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
     </Match>
 </FindBugsFilter>
