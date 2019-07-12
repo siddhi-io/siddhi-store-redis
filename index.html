@@ -658,7 +658,7 @@
   <a href="https://github.com/siddhi-io/siddhi-store-redis/issues"><img alt="GitHub Open Issues" src="https://img.shields.io/github/issues-raw/siddhi-io/siddhi-store-redis.svg" /></a>
   <a href="https://github.com/siddhi-io/siddhi-store-redis/commits/master"><img alt="GitHub Last Commit" src="https://img.shields.io/github/last-commit/siddhi-io/siddhi-store-redis.svg" /></a>
   <a href="https://opensource.org/licenses/Apache-2.0"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue.svg" /></a></p>
-<p>The <strong>siddhi-store-redis extension</strong> is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that persist and retrieve to persist events to redis cloud instance of version 4.x.x.</p>
+<p>The <strong>siddhi-store-redis extension</strong> is an extension to <a target="_blank" href="https://wso2.github.io/siddhi">Siddhi</a> that persist and retrieve events to/from Redis.</p>
 <p>For information on <a target="_blank" href="https://siddhi.io/">Siddhi</a> and it's features refer <a target="_blank" href="https://siddhi.io/redirect/docs.html">Siddhi Documentation</a>. </p>
 <h2 id="download">Download</h2>
 <ul>
@@ -672,7 +672,8 @@
 <li><a target="_blank" href="https://siddhi-io.github.io/siddhi-store-redis/api/3.1.0/#redis-store">redis</a> <em><a target="_blank" href="https://siddhi.io/en/v5.0/docs/query-guide/#store">(Store)</a></em><br><div style="padding-left: 1em;"><p>This extension assigns data source and connection instructions to event tables. It also implements read write operations on connected datasource. This extension only can be used to read the data which persisted using the same extension since unique implementation has been used to map the relational data in to redis's key and value representation</p></div></li>
 </ul>
 <h2 id="dependencies">Dependencies</h2>
-<p>This extension depends on Jedis, redis client. Please download redis client jar (2.9.0) use it.</p>
+<p>This extension depends on Jedis, redis client. Please download redis client jar (2.9.0) use it.
+Tested/supported with Redis cloud instance version 4.x.x .</p>
 <h2 id="installation">Installation</h2>
 <p>For installing this extension on various siddhi execution environments refer Siddhi documentation section on <a target="_blank" href="https://siddhi.io/redirect/add-extensions.html">adding extensions</a>.</p>
 <h2 id="support-and-contribution">Support and Contribution</h2>
