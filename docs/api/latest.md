@@ -80,7 +80,7 @@
 <span id="examples" class="md-typeset" style="display: block; font-weight: bold;">Examples</span>
 <span id="example-1" class="md-typeset" style="display: block; color: rgba(0, 0, 0, 0.54); font-size: 12.8px; font-weight: bold;">EXAMPLE 1</span>
 ```
-@store(type='redis',nodes='localhost:6379@root',table.name='fooTable',cluster.mode=false)define table fooTable(time long, date String)
+@store(type='redis',nodes='localhost:6379@root',table.name='fooTable',cluster.mode='false')define table fooTable(time long, date String)
 ```
 <p></p>
 <p style="word-wrap: break-word;margin: 0;">Above example will create a redis table with the name fooTable and work on asingle redis node.</p>
