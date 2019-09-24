@@ -117,7 +117,7 @@ import static io.siddhi.extension.store.redis.utils.RedisTableUtils.resolveCondi
         examples = {
                 @Example(
                         syntax = "@store(type='redis',nodes='localhost:6379@root',table.name='fooTable'," +
-                                "cluster.mode=false)" +
+                                "cluster.mode='false')" +
                                 "define table fooTable(time long, date String)",
                         description = "Above example will create a redis table with the name fooTable and work on a" +
                                 "single redis node."
