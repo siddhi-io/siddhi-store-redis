@@ -22,4 +22,8 @@
         <Class name="io.siddhi.extension.store.redis.RedisIterator"/>
         <Bug pattern="PZLA_PREFER_ZERO_LENGTH_ARRAYS"/>
     </Match>
+    <Match>
+        <Class name="io.siddhi.extension.store.redis.RedisCompliedCondition"/>
+        <Bug pattern="SE_BAD_FIELD"/>
+    </Match>
 </FindBugsFilter>
