@@ -45,8 +45,8 @@
             <artifactId>siddhi-query-api</artifactId>
         </dependency>
         <dependency>
-            <groupId>slf4j.wso2</groupId>
-            <artifactId>slf4j</artifactId>
+            <groupId>org.apache.logging.log4j</groupId>
+            <artifactId>log4j-core</artifactId>
         </dependency>
         <dependency>
             <groupId>commons-logging</groupId>

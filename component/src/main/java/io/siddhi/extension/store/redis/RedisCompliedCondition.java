@@ -24,6 +24,7 @@ import io.siddhi.core.util.collection.operator.CompiledCondition;
  * CompiledCondition class
  **/
 public class RedisCompliedCondition implements CompiledCondition {
+    private static final long serialVersionUID = 1L;
     private BasicCompareOperation compiledQuery;
 
     RedisCompliedCondition(BasicCompareOperation compiledQuery) {

@@ -130,9 +130,9 @@
     </profiles>
 
     <properties>
-        <siddhi.version>5.1.2</siddhi.version>
+        <siddhi.version>5.1.21</siddhi.version>
         <siddhi.version.range>[5.0.0,6.0.0)</siddhi.version.range>
-        <wso2.slf4j.version>1.5.10.wso2v1</wso2.slf4j.version>
+        <log4j.version>2.17.1</log4j.version>
         <testng.version>6.8</testng.version>
         <commons.logging.version>1.1.1</commons.logging.version>
         <redis.version>2.9.0</redis.version>
@@ -181,9 +181,27 @@
                 <scope>provided</scope>
             </dependency>
             <dependency>
-                <groupId>slf4j.wso2</groupId>
-                <artifactId>slf4j</artifactId>
-                <version>${wso2.slf4j.version}</version>
+                <groupId>org.apache.logging.log4j</groupId>
+                <artifactId>log4j-core</artifactId>
+                <version>${log4j.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <groupId>javax.mail</groupId>
+                        <artifactId>mail</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>javax.jms</groupId>
+                        <artifactId>jms</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jdmk</groupId>
+                        <artifactId>jmxtools</artifactId>
+                    </exclusion>
+                    <exclusion>
+                        <groupId>com.sun.jmx</groupId>
+                        <artifactId>jmxri</artifactId>
+                    </exclusion>
+                </exclusions>
             </dependency>
             <dependency>
                 <groupId>redis.clients</groupId>

@@ -20,7 +20,8 @@ package io.siddhi.extension.store.redis.utils;
 
 import io.siddhi.extension.store.redis.BasicCompareOperation;
 import io.siddhi.extension.store.redis.RedisCompliedCondition;
-import org.apache.log4j.Logger;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.nio.ByteBuffer;
 import java.security.SecureRandom;
@@ -37,7 +38,7 @@ public class RedisTableUtils {
     }
 
     private static ThreadLocal<SecureRandom> secureRandom = ThreadLocal.withInitial(SecureRandom::new);
-    private static Logger log = Logger.getLogger(RedisTableUtils.class);
+    private static final Logger log = LogManager.getLogger(RedisTableUtils.class);
 
     //this method will be used to generate an id to add when there is no primary key is defined.
     public static String generateRecordID() {
